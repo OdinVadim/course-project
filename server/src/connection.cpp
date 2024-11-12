@@ -18,37 +18,105 @@ const char* port = "8080";
 
 //Список опрашиваемых сокетов
 fd_set socket_polling_list;
+int max_socket;
 
 int start_server()
 {
     std::cout << "[Info] Starting the server...\n";
-    //Создаём сокет
-    int socket = create_socket();
+    //Создаём сокет сервера
+    int server_socket = create_server_socket();
     
-    //Проверяем созданный сокет
-    if (socket < 0)
+    //Проверяем созданный сокет сервера
+    if (server_socket < 0)
     {
         return -1;
     }
 
     //Очищаем список опрашиваемых сокетов
     FD_ZERO(&socket_polling_list);
-    //Добавляем созданный сокет в список опрашиваемых сокетов
-    FD_SET(socket, &socket_polling_list);
+    //Добавляем созданный сокет сервера в список опрашиваемых сокетов
+    FD_SET(server_socket, &socket_polling_list);
 
     std::cout << "[Info] The server is start\n";
-    return socket;
-}
+    max_socket = server_socket;
 
-void shutdown_server(int socket)
+    return server_socket;
+}
+void shutdown_server(int server_socket)
 {
     std::cout << "[Info] Shutting down the server...\n";
     //Закрываем сокет
-    close(socket);
+    close(server_socket);
     std::cout << "[Info] The server is shut down\n";
 }
 
-int create_socket()
+int handle_connection(int server_socket, const std::string& exit_message)
+{
+    fd_set socket_polling_list_ = socket_polling_list;
+
+    if (select(max_socket + 1, &socket_polling_list, nullptr, nullptr, nullptr) < 0)
+    {
+        std::cout << "[Error] Failed to fetch data on the server server_socket";
+        return -1;
+    }
+
+    //Проходим все сокеты от единицы до 
+    for (int socket = 1; socket <= max_socket + 1; socket++)
+    {
+        //Проверяем на наличие в списке обрабатываемых сокетов
+        if (FD_ISSET(socket, &socket_polling_list_))
+        {
+            //Если обрабатываемый сокет - сокет сервера, то подключаем клиента, если есть запрос на подключение к серверу
+            if (socket == server_socket)
+            {
+                if (connect_client(server_socket) < 0)
+                {
+                    return -1;
+                }
+            }
+            //Иначе читаем поступившие сообщения от клиента
+            else
+            {
+                std::string message;
+
+                if (recieve_message(server_socket, socket, &message) <= 0)
+                {
+                    disconnect_client(server_socket, socket);
+                    continue;
+                }
+
+                std::cout << message << "\n";
+
+                if (message == exit_message)
+                {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+int connect_client(int server_socket)
+{
+    return 0;
+}
+int disconnect_client(int server_socket, int client_socket)
+{
+    return 0;
+}
+
+int send_message(int server_socket, int client_socket, const std::string& message)
+{
+    return 0;
+}
+int recieve_message(int server_socket, int client_socket, std::string* message)
+{
+    return 0;
+}
+
+int create_server_socket()
 {
     //addrinfo хранит в себе информацию об адресе, по которому будет происходить подключение
     //В hints записываются данные о типе подключения, которые потом будут перезаписаны в address
@@ -70,12 +138,12 @@ int create_socket()
     }
 
     //Создаём сокет
-    int socket_ = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
+    int server_socket = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
 
     //Проверяем созданный сокет
-    if (socket_ < 0)
+    if (server_socket < 0)
     {
-        std::cout << "[Error] Failed to create socket\n";
+        std::cout << "[Error] Failed to create server_socket\n";
 
         //Освобождаем память от address
         freeaddrinfo(address);
@@ -83,9 +151,9 @@ int create_socket()
     }
 
     //Привязываем созданный сокет к адресу
-    if (bind(socket_, address->ai_addr, address->ai_addrlen) == -1)
+    if (bind(server_socket, address->ai_addr, address->ai_addrlen) == -1)
     {
-        std::cout << "[Error] Failed to bind socket to address\n";
+        std::cout << "[Error] Failed to bind server_socket to address\n";
 
         //Освобождаем память от address
         freeaddrinfo(address);
@@ -99,21 +167,21 @@ int create_socket()
     int yes = 1;
     
     //Настраиваем сокет
-    if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
     {
-        std::cout << "[Error] Failed to set socket options\n";
+        std::cout << "[Error] Failed to set server_socket options\n";
         return -1;
     }
 
     //Настраиваем сокет на прослушивание
-    if (listen(socket_, 10) == -1)
+    if (listen(server_socket, 10) == -1)
     {
         std::cout << "[Error] Failed to activate soket listenner\n";
         return -1;
     }
 
     //Возвращаем созданный сокет
-    return socket_;
+    return server_socket;
 }
 
 #endif /*UNIX*/
