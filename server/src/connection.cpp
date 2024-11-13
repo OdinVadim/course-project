@@ -18,6 +18,7 @@ const char* port = "8080";
 
 //Список опрашиваемых сокетов
 fd_set socket_polling_list;
+//Максимальное значение сокета
 int max_socket;
 
 int start_server()
@@ -38,6 +39,8 @@ int start_server()
     FD_SET(server_socket, &socket_polling_list);
 
     std::cout << "[Info] The server is start\n";
+
+    //Устанавливаем знасение созданного сокета сервера максимальным
     max_socket = server_socket;
 
     return server_socket;
@@ -60,7 +63,7 @@ int handle_connection(int server_socket, const std::string& exit_message)
         return -1;
     }
 
-    //Проходим все сокеты от единицы до 
+    //Проходим все сокеты от единицы до максимального сокета, который был создан
     for (int socket = 1; socket <= max_socket + 1; socket++)
     {
         //Проверяем на наличие в списке обрабатываемых сокетов
@@ -74,7 +77,7 @@ int handle_connection(int server_socket, const std::string& exit_message)
                     return -1;
                 }
             }
-            //Иначе читаем поступившие сообщения от клиента
+            //Иначе читаем поступившие сообщения от клиента по этому сокету
             else
             {
                 std::string message;
@@ -85,7 +88,7 @@ int handle_connection(int server_socket, const std::string& exit_message)
                     continue;
                 }
 
-                std::cout << message << "\n";
+                std::cout << "[Client: " << server_socket << "] " << message << "\n";
 
                 if (message == exit_message)
                 {
@@ -100,6 +103,30 @@ int handle_connection(int server_socket, const std::string& exit_message)
 
 int connect_client(int server_socket)
 {
+    sockaddr_storage address;
+    socklen_t address_len = sizeof(address);
+
+    //Создаём сокет клиента
+    int client_socket = accept(server_socket, reinterpret_cast<sockaddr*>(&address), &address_len);
+
+    //Проверяем созданный сокет клиента
+    if (client_socket < 0)
+    {
+        std::cout << "[Error] Failed to connect client\n";
+        return -1;
+    }
+
+    std::cout << "[Info] Connect new client: " << client_socket << "\n";
+
+    //Если значение сокета клиента больше максимального, то 
+    if (client_socket > max_socket)
+    {
+        max_socket = client_socket;
+    }
+
+    //Добавляем сокет клиента в список опрашиваемых сокетов
+    FD_SET(client_socket, &socket_polling_list);
+
     return 0;
 }
 int disconnect_client(int server_socket, int client_socket)
