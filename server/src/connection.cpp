@@ -84,7 +84,7 @@ int handle_connection(int server_socket, const std::string& exit_message)
 
                 if (recieve_message(server_socket, socket, &message) <= 0)
                 {
-                    disconnect_client(server_socket, socket);
+                    disconnect_client(socket);
                     continue;
                 }
 
@@ -129,9 +129,14 @@ int connect_client(int server_socket)
 
     return 0;
 }
-int disconnect_client(int server_socket, int client_socket)
+void disconnect_client(int client_socket)
 {
-    return 0;
+    //Закрываем сокет клиента
+    close(client_socket);
+    //Удаляем сокет из списка опрашиваемых сокетов
+    FD_CLR(client_socket, &socket_polling_list);
+
+    return;
 }
 
 int send_message(int server_socket, int client_socket, const std::string& message)

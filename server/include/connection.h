@@ -13,7 +13,7 @@ int handle_connection(int server_socket, const std::string& exit_message);
 //Подключить клиента, если есть запрос на подключение к серверу
 int connect_client(int server_socket);
 //Отключить клиента
-int disconnect_client(int server_socket, int client_socket);
+void disconnect_client(int client_socket);
 
 //Отправка сообщения клиенту
 int send_message(int server_socket, int client_socket, const std::string& message);
