@@ -16,9 +16,9 @@ int connect_client(int server_socket);
 void disconnect_client(int client_socket);
 
 //Отправка сообщения клиенту
-int send_message(int server_socket, int client_socket, const std::string& message);
+int send_message(int client_socket, const std::string& message);
 //Приём сообщения от клиента
-int recieve_message(int server_socket, int client_socket, std::string* message);
+int recieve_message(int client_socket, std::string& message);
 
 //Создание сокета
 int create_server_socket();

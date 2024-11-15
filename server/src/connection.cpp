@@ -82,13 +82,15 @@ int handle_connection(int server_socket, const std::string& exit_message)
             {
                 std::string message;
 
-                if (recieve_message(server_socket, socket, &message) <= 0)
+                if (recieve_message(socket, message) < 0)
                 {
                     disconnect_client(socket);
                     continue;
                 }
 
                 std::cout << "[Client: " << server_socket << "] " << message << "\n";
+
+                send_message(socket, message);
 
                 if (message == exit_message)
                 {
@@ -136,15 +138,36 @@ void disconnect_client(int client_socket)
     //Удаляем сокет из списка опрашиваемых сокетов
     FD_CLR(client_socket, &socket_polling_list);
 
+    std::cout << "[Info] Client " << client_socket << " has been disconnected\n";
+
     return;
 }
 
-int send_message(int server_socket, int client_socket, const std::string& message)
+int send_message(int client_socket, const std::string& message)
 {
+    if (send(client_socket, message.data(), message.size(), 0) < 0)
+    {
+        std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
+        return -1;
+    }
+
     return 0;
 }
-int recieve_message(int server_socket, int client_socket, std::string* message)
+int recieve_message(int client_socket, std::string& message)
 {
+    const int length = 128;
+    char* buffer = new char[length];
+
+    if (recv(client_socket, buffer, length, 0) < 0)
+    {
+        std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
+        delete[] buffer;
+        return -1;
+    }
+
+    message = std::string(buffer);
+
+    delete[] buffer;
     return 0;
 }
 
