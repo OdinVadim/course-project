@@ -32,12 +32,17 @@ int connect_to_server()
 
     return 0;
 }
-void disconnect_from_server(int socket)
+void disconnect_from_server(int client_socket)
 {
+    std::cout << "[Info] Disconnecting from server...\n";
+    //Закрываем сокет
+    close(client_socket);
+    std::cout << "[Info] Disconnected from server\n";
+    
     return;
 }
 
-int handle_connection(int socket)
+int handle_connection(int client_socket)
 {
     return 0;
 }

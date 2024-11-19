@@ -6,10 +6,10 @@
 //Подключение к серверу
 int connect_to_server();
 //Отключение от сервера
-void disconnect_from_server(int socket);
+void disconnect_from_server(int client_socket);
 
 //Обработка подключения
-int handle_connection(int socket);
+int handle_connection(int client_socket);
 
 //Отправка сообщение серверу
 int send_message(const std::string& message);
