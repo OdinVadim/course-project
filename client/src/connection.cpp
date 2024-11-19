@@ -79,6 +79,7 @@ int create_socket()
     if (connect(client_socket, address->ai_addr, address->ai_addrlen) == -1)
     {
         std::cout << "[Error] Failed to connect to server\n";
+        freeaddrinfo(address);
         return -1;
     }
 
