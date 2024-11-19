@@ -14,7 +14,7 @@
 
 //IP-адрес и номер порта
 const char* ip_address = "127.0.0.1";
-const char* port = "8889";
+const char* port = "8080";
 
 //Список опрашиваемых сокетов
 fd_set socket_polling_list;
@@ -183,10 +183,12 @@ int create_server_socket()
     std::memset(&hints, 0x00, sizeof(addrinfo));
     //Используем IPv4
     hints.ai_family = AF_INET;
+    //Используем тип сокета TCP
+    hints.ai_socktype = SOCK_STREAM;
     //Используем протокол TCP
-    hints.ai_protocol = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
 
-    //Записываем адрес по указателю adress, если функция возвращает не ноль, значит произошла ошибка
+    //Записываем адрес по указателю adress, если функция возвращает не ноль, значит произошла ошибка    
     if (getaddrinfo(ip_address, port, &hints, &address) != 0)
     {
         std::cout << "[Error] Failed to resolve address\n";
