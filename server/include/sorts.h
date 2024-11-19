@@ -1,8 +1,9 @@
-#ifndef sorts_h
-#define sorts_h
+#ifndef SORTS_H
+#define SORTS_H
 
 #include <vector>
 using namespace std;
 void selectionSort(vector<int>& arr);
 void shellSort(vector<int>& arr);
-#endif //sorts_h
+
+#endif //SORTS_H
