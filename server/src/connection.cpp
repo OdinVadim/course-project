@@ -14,7 +14,7 @@
 
 //IP-адрес и номер порта
 const char* ip_address = "127.0.0.1";
-const char* port = "8080";
+const char* port = "8889";
 
 //Список опрашиваемых сокетов
 fd_set socket_polling_list;
@@ -94,6 +94,7 @@ int handle_connection(int server_socket, const std::string& exit_message)
 
                 if (message == exit_message)
                 {
+                    std::cout << "[Info] Recieve exit message from client " << socket << "\n";
                     return 1;
                 }
             }
