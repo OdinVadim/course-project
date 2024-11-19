@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SERVER_CONNECTION_H
+#define SERVER_CONNECTION_H
 
 #include <string>
 
@@ -22,3 +23,5 @@ int recieve_message(int client_socket, std::string& message);
 
 //Создание сокета
 int create_server_socket();
+
+#endif //SERVER_CONNECTION_H
