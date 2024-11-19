@@ -2,8 +2,8 @@
 #define SORTS_H
 
 #include <vector>
-using namespace std;
-void selectionSort(vector<int>& arr);
-void shellSort(vector<int>& arr);
+
+void selectionSort(std::vector<int>& arr);
+void shellSort(std::vector<int>& arr);
 
 #endif //SORTS_H
