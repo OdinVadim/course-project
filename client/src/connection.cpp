@@ -18,6 +18,18 @@ const char* port = "8080";
 
 int connect_to_server()
 {
+    std::cout << "[Info] Connecting to server...\n";
+    //Создаём сокет клиента
+    int client_socket = create_socket();
+
+    //Проверяем созданный сокет клиента
+    if (client_socket < 0)
+    {
+        return -1;
+    }
+
+    std::cout << "[Info] Connected to server\n";
+
     return 0;
 }
 void disconnect_from_server(int socket)
