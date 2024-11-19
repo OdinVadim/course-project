@@ -30,7 +30,7 @@ int connect_to_server()
 
     std::cout << "[Info] Connected to server\n";
 
-    return 0;
+    return client_socket;
 }
 void disconnect_from_server(int client_socket)
 {
@@ -42,16 +42,11 @@ void disconnect_from_server(int client_socket)
     return;
 }
 
-int handle_connection(int client_socket)
-{
-    return 0;
-}
-
 int send_message(int client_socket, const std::string& message)
 {
     if (send(client_socket, message.data(), message.size(), 0) < 0)
     {
-        std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
+        std::cout << "[Error] Failed to send data to server" << "\n";
         return -1;
     }
 
@@ -64,7 +59,7 @@ int recieve_message(int client_socket, std::string& message)
 
     if (recv(client_socket, buffer, length, 0) < 0)
     {
-        std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
+        std::cout << "[Error] Failed recieve data from server" << "\n";
         delete[] buffer;
         return -1;
     }
