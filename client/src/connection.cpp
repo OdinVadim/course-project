@@ -38,7 +38,7 @@ void disconnect_from_server(int client_socket)
     //Закрываем сокет
     close(client_socket);
     std::cout << "[Info] Disconnected from server\n";
-    
+
     return;
 }
 
@@ -47,12 +47,31 @@ int handle_connection(int client_socket)
     return 0;
 }
 
-int send_message(const std::string& message)
+int send_message(int client_socket, const std::string& message)
 {
+    if (send(client_socket, message.data(), message.size(), 0) < 0)
+    {
+        std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
+        return -1;
+    }
+
     return 0;
 }
-int recieve_message(std::string& message)
+int recieve_message(int client_socket, std::string& message)
 {
+    const int length = 128;
+    char* buffer = new char[length];
+
+    if (recv(client_socket, buffer, length, 0) < 0)
+    {
+        std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
+        delete[] buffer;
+        return -1;
+    }
+
+    message = std::string(buffer);
+
+    delete[] buffer;
     return 0;
 }
 
