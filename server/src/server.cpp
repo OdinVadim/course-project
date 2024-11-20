@@ -13,11 +13,20 @@ int main()
 {
 #ifdef UNIX
 
-    int server_soket = start_server();
+    int server_socket = start_server();
+    int max_socket = server_socket;
 
-    while (handle_connection(server_soket, "exit") == 0);
+    //Список опрашиваемых сокетов
+    fd_set socket_polling_list;
 
-    shutdown_server(server_soket);
+    //Очищаем список опрашиваемых сокетов
+    FD_ZERO(&socket_polling_list);
+    //Добавляем созданный сокет сервера в список опрашиваемых сокетов
+    FD_SET(server_socket, &socket_polling_list);
+
+    while (handle_connection(server_socket, socket_polling_list, max_socket, "exit") == 0);
+
+    shutdown_server(server_socket);
 
 #endif /*UNIX*/
 #ifdef WIN

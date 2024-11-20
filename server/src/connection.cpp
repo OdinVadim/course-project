@@ -16,10 +16,8 @@
 const char* ip_address = "127.0.0.1";
 const char* port = "8080";
 
-//Список опрашиваемых сокетов
-fd_set socket_polling_list;
-//Максимальное значение сокета
-int max_socket;
+//Размер очереди для полностью установленных соединений, ожидающих, пока процесс примет их
+const int backlog = 8;
 
 int start_server()
 {
@@ -33,15 +31,7 @@ int start_server()
         return -1;
     }
 
-    //Очищаем список опрашиваемых сокетов
-    FD_ZERO(&socket_polling_list);
-    //Добавляем созданный сокет сервера в список опрашиваемых сокетов
-    FD_SET(server_socket, &socket_polling_list);
-
     std::cout << "[Info] The server is start\n";
-
-    //Устанавливаем знасение созданного сокета сервера максимальным
-    max_socket = server_socket;
 
     return server_socket;
 }
@@ -53,10 +43,8 @@ void shutdown_server(int server_socket)
     std::cout << "[Info] The server is shut down\n";
 }
 
-int handle_connection(int server_socket, const std::string& exit_message)
+int handle_connection(int server_socket, fd_set& socket_polling_list, int& max_socket, const std::string& exit_message)
 {
-    fd_set socket_polling_list_ = socket_polling_list;
-
     if (select(max_socket + 1, &socket_polling_list, nullptr, nullptr, nullptr) < 0)
     {
         std::cout << "[Error] Failed to fetch data on the server server_socket";
@@ -64,15 +52,15 @@ int handle_connection(int server_socket, const std::string& exit_message)
     }
 
     //Проходим все сокеты от единицы до максимального сокета, который был создан
-    for (int socket = 1; socket <= max_socket + 1; socket++)
+    for (int socket = 0; socket <= max_socket + 1; socket++)
     {
         //Проверяем на наличие в списке обрабатываемых сокетов
-        if (FD_ISSET(socket, &socket_polling_list_))
+        if (FD_ISSET(socket, &socket_polling_list))
         {
             //Если обрабатываемый сокет - сокет сервера, то подключаем клиента, если есть запрос на подключение к серверу
             if (socket == server_socket)
             {
-                if (connect_client(server_socket) < 0)
+                if (connect_client(server_socket, socket_polling_list, max_socket) < 0)
                 {
                     return -1;
                 }
@@ -84,11 +72,11 @@ int handle_connection(int server_socket, const std::string& exit_message)
 
                 if (recieve_message(socket, message) < 0)
                 {
-                    disconnect_client(socket);
+                    disconnect_client(socket, socket_polling_list);
                     continue;
                 }
 
-                std::cout << "[Client: " << server_socket << "] " << message << "\n";
+                std::cout << "[Client: " << socket << "] " << message << "\n";
 
                 send_message(socket, message);
 
@@ -104,7 +92,7 @@ int handle_connection(int server_socket, const std::string& exit_message)
     return 0;
 }
 
-int connect_client(int server_socket)
+int connect_client(int server_socket, fd_set& socket_polling_list, int& max_socket)
 {
     sockaddr_storage address;
     socklen_t address_len = sizeof(address);
@@ -132,7 +120,7 @@ int connect_client(int server_socket)
 
     return 0;
 }
-void disconnect_client(int client_socket)
+void disconnect_client(int client_socket, fd_set& socket_polling_list)
 {
     //Закрываем сокет клиента
     close(client_socket);
@@ -223,7 +211,7 @@ int create_server_socket()
 
     //Настраиваем сокет
     int yes = 1;
-    
+
     //Настраиваем сокет
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
     {
@@ -232,7 +220,7 @@ int create_server_socket()
     }
 
     //Настраиваем сокет на прослушивание
-    if (listen(server_socket, 10) == -1)
+    if (listen(server_socket, backlog) == -1)
     {
         std::cout << "[Error] Failed to activate soket listenner\n";
         return -1;
