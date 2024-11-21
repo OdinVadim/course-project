@@ -26,7 +26,7 @@ int main()
     //Добавляем созданный сокет сервера в список опрашиваемых сокетов
     FD_SET(server_socket, &socket_polling_list);
 
-    while (handle_connection(server_socket, socket_polling_list, max_socket, "exit") == 0);
+    while (handle_connection(server_socket, &socket_polling_list, max_socket, "exit") == 0);
 
     shutdown_server(server_socket);
 

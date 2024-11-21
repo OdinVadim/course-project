@@ -9,12 +9,12 @@ int start_server();
 void shutdown_server(int server_socket);
 
 //Обработка подключения
-int handle_connection(int server_socket, fd_set& socket_polling_list, int& max_socket, const std::string& exit_message);
+int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_socket, const std::string& exit_message);
 
 //Подключить клиента, если есть запрос на подключение к серверу
-int connect_client(int server_socket, fd_set& socket_polling_list, int& max_soxket);
+int connect_client(int server_socket, fd_set* socket_polling_list, int& max_soxket);
 //Отключить клиента
-void disconnect_client(int client_socket, fd_set& socket_polling_list);
+void disconnect_client(int client_socket, fd_set* socket_polling_list);
 
 //Отправка сообщения клиенту
 int send_message(int client_socket, const std::string& message);

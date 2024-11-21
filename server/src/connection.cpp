@@ -43,20 +43,25 @@ void shutdown_server(int server_socket)
     std::cout << "[Info] The server is shut down\n";
 }
 
-int handle_connection(int server_socket, fd_set& socket_polling_list, int& max_socket, const std::string& exit_message)
+int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_socket, const std::string& exit_message)
 {
-    if (select(max_socket + 1, &socket_polling_list, nullptr, nullptr, nullptr) < 0)
-    {
-        std::cout << "[Error] Failed to fetch data on the server server_socket";
-        return -1;
-    }
-
     //Проходим все сокеты от единицы до максимального сокета, который был создан
     for (int socket = 0; socket <= max_socket + 1; socket++)
     {
         //Проверяем на наличие в списке обрабатываемых сокетов
-        if (FD_ISSET(socket, &socket_polling_list))
+        if (FD_ISSET(socket, socket_polling_list))
         {
+            fd_set fd_socket;
+            FD_ZERO(&fd_socket);
+            FD_SET(socket, &fd_socket);
+
+            timeval time_for_select = {0, 100}; 
+
+            if (select(socket + 1, &fd_socket, nullptr, nullptr, &time_for_select) == 0)
+            {
+                continue;
+            }
+
             //Если обрабатываемый сокет - сокет сервера, то подключаем клиента, если есть запрос на подключение к серверу
             if (socket == server_socket)
             {
@@ -92,7 +97,7 @@ int handle_connection(int server_socket, fd_set& socket_polling_list, int& max_s
     return 0;
 }
 
-int connect_client(int server_socket, fd_set& socket_polling_list, int& max_socket)
+int connect_client(int server_socket, fd_set* socket_polling_list, int& max_socket)
 {
     sockaddr_storage address;
     socklen_t address_len = sizeof(address);
@@ -116,16 +121,16 @@ int connect_client(int server_socket, fd_set& socket_polling_list, int& max_sock
     }
 
     //Добавляем сокет клиента в список опрашиваемых сокетов
-    FD_SET(client_socket, &socket_polling_list);
+    FD_SET(client_socket, socket_polling_list);
 
     return 0;
 }
-void disconnect_client(int client_socket, fd_set& socket_polling_list)
+void disconnect_client(int client_socket, fd_set* socket_polling_list)
 {
     //Закрываем сокет клиента
     close(client_socket);
     //Удаляем сокет из списка опрашиваемых сокетов
-    FD_CLR(client_socket, &socket_polling_list);
+    FD_CLR(client_socket, socket_polling_list);
 
     std::cout << "[Info] Client " << client_socket << " has been disconnected\n";
 
