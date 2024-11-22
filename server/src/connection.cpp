@@ -5,7 +5,6 @@
 //Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Unix-системах
 #include <sys/socket.h> 
 #include <netdb.h>
-
 #include <unistd.h>
 
 #include <iostream>
@@ -22,9 +21,9 @@ const int backlog = 8;
 int start_server()
 {
     std::cout << "[Info] Starting the server...\n";
+
     //Создаём сокет сервера
     int server_socket = create_server_socket();
-    
     //Проверяем созданный сокет сервера
     if (server_socket < 0)
     {
@@ -51,15 +50,29 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
         //Проверяем на наличие в списке обрабатываемых сокетов
         if (FD_ISSET(socket, socket_polling_list))
         {
+            //Создаём новый список сокетов
             fd_set fd_socket;
+            //Очищаем список
             FD_ZERO(&fd_socket);
+            //Добавляем в этот список только обрабатываемый в текущий момент сокет
             FD_SET(socket, &fd_socket);
+            //Устанавливаем нулевое время ожидания
+            timeval time_for_select = {0, 0}; 
 
-            timeval time_for_select = {0, 100}; 
-
-            if (select(socket + 1, &fd_socket, nullptr, nullptr, &time_for_select) == 0)
+            //Функция select возвращает количество сокетов из списка, доступных для чтения
+            //Так как в списке только один сокет, select вернёт либо 0, либо 1, либо отрицательное значение, обозначающее ошибку
+            int socket_data = select(socket + 1, &fd_socket, nullptr, nullptr, &time_for_select);
+            
+            //Проверяем, доступен ли текущий сокет для чтения, если нет, то переходим к обработке следующего сокета
+            if (socket_data == 0)
             {
                 continue;
+            }
+            //Проверяем, не завершилась ли фунция select с ошибкой
+            if (socket_data < 0)
+            {
+                std::cout << "[Error] Failed to fetch data on the server from socket: " << socket << "\n";
+                return -1;
             }
 
             //Если обрабатываемый сокет - сокет сервера, то подключаем клиента, если есть запрос на подключение к серверу
@@ -114,7 +127,7 @@ int connect_client(int server_socket, fd_set* socket_polling_list, int& max_sock
 
     std::cout << "[Info] Connect new client: " << client_socket << "\n";
 
-    //Если значение сокета клиента больше максимального, то 
+    //Если значение сокета клиента больше максимального, то устанавливаем его максимальным
     if (client_socket > max_socket)
     {
         max_socket = client_socket;
@@ -152,7 +165,14 @@ int recieve_message(int client_socket, std::string& message)
     const int length = 128;
     char* buffer = new char[length];
 
-    if (recv(client_socket, buffer, length, 0) < 0)
+    int recieve = recv(client_socket, buffer, length, 0);
+
+    if (recieve == 0)
+    {
+        delete[] buffer;
+        return -1;
+    }
+    if (recieve < 0)
     {
         std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
         delete[] buffer;
@@ -216,8 +236,6 @@ int create_server_socket()
 
     //Настраиваем сокет
     int yes = 1;
-
-    //Настраиваем сокет
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
     {
         std::cout << "[Error] Failed to set server_socket options\n";

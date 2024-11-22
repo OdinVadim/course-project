@@ -16,12 +16,12 @@ int main()
         return -1;
     }
     
-    std::string input = "";
+    std::string input;
+
+    std::cin >> input;
 
     while (input != "close")
     {
-        std::cin >> input;
-
         send_message(client_socket, input);
 
         std::string message = "";
@@ -30,7 +30,11 @@ int main()
             recieve_message(client_socket, message);
         }
         cout << "[Server] " << message << "\n";
+
+        std::cin >> input;
     }
+
+    disconnect_from_server(client_socket);
 
 #endif /*UNIX*/
 #ifdef WIN
