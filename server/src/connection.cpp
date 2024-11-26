@@ -233,7 +233,7 @@ int recieve_message(int client_socket, std::vector<char>& message)
 
     for (int i = 0; i < a; i++)
     {
-        for (int j = 0; j < a; j++)
+        for (int j = 0; j < package_length; j++)
         {
             message[package_length*i + j] = *(buffer++);
         }
