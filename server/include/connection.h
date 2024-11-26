@@ -18,9 +18,9 @@ int connect_client(int server_socket, fd_set* socket_polling_list, int& max_soxk
 void disconnect_client(int client_socket, fd_set* socket_polling_list);
 
 //Отправка сообщения клиенту
-int send_message(int client_socket, const std::string& message);
+int send_message(int client_socket, const std::vector<char>& message);
 //Приём сообщения от клиента
-int recieve_message(std::vector<char>& message, int client_socket);
+int recieve_message(int client_socket, std::vector<char>& message);
 
 //Создание сокета
 int create_server_socket();

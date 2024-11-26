@@ -39,12 +39,10 @@ int main()
 
         send_message(client_socket, send);
 
-        std::string message = "";
-        while (message.length() == 0)
-        {
-            recieve_message(client_socket, message);
-        }
-        cout << "[Server] " << message << "\n";
+        std::vector<char> message;
+        recieve_message(client_socket, message);
+
+        cout << "[Server] " << (message.data() + 4) << "\n";
 
         std::cin >> input;
     }

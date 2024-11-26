@@ -90,7 +90,7 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
             else
             {
                 std::vector<char> message;
-                if (recieve_message(message, socket) < 0)
+                if (recieve_message(socket, message) < 0)
                 {
                     disconnect_client(socket, socket_polling_list);
                     continue;
@@ -106,7 +106,7 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
                 }
                 std::cout << "\n";
 
-                send_message(socket, message.data() + 4);
+                send_message(socket, message);
                 if ((message.data() + 4) == exit_message)
                 {
                     std::cout << "[Info] Recieve exit message from client " << socket << "\n";
@@ -160,7 +160,7 @@ void disconnect_client(int client_socket, fd_set* socket_polling_list)
     return;
 }
 
-int send_message(int client_socket, const std::string& message)
+int send_message(int client_socket, const std::vector<char>& message)
 {
     if (send(client_socket, message.data(), message.size(), 0) < 0)
     {
@@ -170,7 +170,7 @@ int send_message(int client_socket, const std::string& message)
 
     return 0;
 }
-int recieve_message(std::vector<char>& message, int client_socket)
+int recieve_message(int client_socket, std::vector<char>& message)
 {    
     char* buffer = new char[package_length];
     char* buffer_ = buffer;
@@ -191,6 +191,7 @@ int recieve_message(std::vector<char>& message, int client_socket)
 
     int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
+    message.clear();
     message = std::vector<char>(message_length);
 
     int a = message_length / package_length;

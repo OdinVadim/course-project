@@ -55,20 +55,67 @@ int send_message(int client_socket, const std::string& message)
 
     return 0;
 }
-int recieve_message(int client_socket, std::string& message)
+int recieve_message(int client_socket, std::vector<char>& message)
 {
-    const int length = 128;
-    char* buffer = new char[length];
+    char* buffer = new char[package_length];
+    char* buffer_ = buffer;
 
-    if (recv(client_socket, buffer, length, 0) < 0)
+    int recieve = recv(client_socket, buffer, package_length, 0);
+
+    if (recieve == 0)
     {
-        std::cout << "[Error] Failed recieve data from server" << "\n";
+        delete[] buffer;
+        return -1;
+    }
+    if (recieve < 0)
+    {
+        std::cout << "[Error] Failed recieve data from server\n";
         delete[] buffer;
         return -1;
     }
 
-    message = std::string(buffer);
+    int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
+    message.clear();
+    message = std::vector<char>(message_length);
+
+    int a = message_length / package_length;
+    int b = message_length % package_length;
+    
+    buffer = buffer_;
+
+    for (int i = 0; i < a; i++)
+    {
+        for (int j = 0; j < a; j++)
+        {
+            message[package_length*i + j] = *(buffer++);
+        }
+
+        recieve = recv(client_socket, buffer, package_length, 0);
+
+        if (recieve == 0)
+        {
+            buffer = buffer_;
+            delete[] buffer;
+
+            return -1;
+        }
+        if (recieve < 0)
+        {
+            std::cout << "[Error] Failed recieve data from server\n";
+            buffer = buffer_;
+            delete[] buffer;
+
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < b; i++)
+    {
+        message[package_length*a + i] = *(buffer++);
+    }
+    
+    buffer = buffer_;
     delete[] buffer;
     return 0;
 }
