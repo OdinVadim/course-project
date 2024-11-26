@@ -162,7 +162,36 @@ void disconnect_client(int client_socket, fd_set* socket_polling_list)
 
 int send_message(int client_socket, const std::vector<char>& message)
 {
-    if (send(client_socket, message.data(), message.size(), 0) < 0)
+    char* buffer = new char[package_length];
+    char* buffer_ = buffer;
+
+    unsigned int message_length = message.size();
+
+    int a = message_length / package_length;
+    int b = message_length % package_length;
+
+    for (int i = 0; i < a; i++)
+    {
+        for (int j = 0; j < package_length; j++)
+        {
+            *(buffer++) = message[i*package_length + j];
+        }
+
+        buffer = buffer_;
+        if (send(client_socket, buffer, package_length, 0) < 0)
+        {
+            std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < b; i++)
+    {
+        *(buffer++) = message[package_length*a + i];
+    }
+
+    buffer = buffer_;
+    if (send(client_socket, buffer, b, 0) < 0)
     {
         std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
         return -1;
@@ -189,7 +218,7 @@ int recieve_message(int client_socket, std::vector<char>& message)
         return -1;
     }
 
-    int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
+    unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
     message.clear();
     message = std::vector<char>(message_length);

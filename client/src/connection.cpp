@@ -74,7 +74,7 @@ int recieve_message(int client_socket, std::vector<char>& message)
         return -1;
     }
 
-    int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
+    unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
     message.clear();
     message = std::vector<char>(message_length);
