@@ -47,101 +47,132 @@ void disconnect_from_server(int client_socket)
 
 int send_message(int client_socket, const std::vector<char>& message)
 {
+    //Создаём буфер, размер которого равен максимальноиу размеру одного пакета
     char* buffer = new char[package_length];
+     //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
 
+    //Длина передаваемого сообщения
     unsigned int message_length = message.size();
 
     int a = message_length / package_length;
     int b = message_length % package_length;
 
+    //Отправляем полностью заполненные пакеты
     for (int i = 0; i < a; i++)
     {
+        //Записываем пакет из message в буфер
         for (int j = 0; j < package_length; j++)
         {
             *(buffer++) = message[i*package_length + j];
         }
 
+        //Возвращаемся к первому элементу буфера
         buffer = buffer_;
+
+        //Отправляем данные и проверяем, что приём данных был завершён без ошибок
         if (send(client_socket, buffer, package_length, 0) < 0)
         {
             std::cout << "[Error] Failed to send data to server\n";
+            //Удаляем буфер
             delete[] buffer;
             return -1;
         }
     }
 
+    //Записываем неполный пакет из message в буфер
     for (int i = 0; i < b; i++)
     {
         *(buffer++) = message[package_length*a + i];
     }
 
+    //Возвращаемся к первому элементу буфера
     buffer = buffer_;
+
+    //Отправляем данные и проверяем, что приём данных был завершён без ошибок
     if (send(client_socket, buffer, b, 0) < 0)
     {
         std::cout << "[Error] Failed to send data to server\n";
+        //Удаляем буфер
         delete[] buffer;
         return -1;
     }
 
+    //Удаляем буфер
     delete[] buffer;
     return 0;
 }
 int recieve_message(int client_socket, std::vector<char>& message)
 {
+    //Создаём буфер, размер которого равен максимальноиу размеру одного пакета
     char* buffer = new char[package_length];
+    //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
 
+    //Принимаем первый пакет
     int recieve = recv(client_socket, buffer, package_length, 0);
 
+    //Проверяем, что сервер прислал ненулевые данные
     if (recieve == 0)
     {
+        //Удаляем буфер
         delete[] buffer;
         return -1;
     }
+    //Проверяем, что приём данных был завершён без ошибок
     if (recieve < 0)
     {
         std::cout << "[Error] Failed recieve data from server\n";
+        //Удаляем буфер
         delete[] buffer;
         return -1;
     }
 
+    //Считываем длину передаваемого сообщения
     unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
+    //Очищаем message
     message.clear();
+    //Создаём новый vector<char>, длина которого равняется длине передаваемого сообщения
     message = std::vector<char>(message_length);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
     
+    //Возвращаемся к первому элементу буфера
     buffer = buffer_;
 
+    //Принимаем полностью заполненные пакеты
     for (int i = 0; i < a; i++)
     {
+        //Записываем пакет из буфера в message
         for (int j = 0; j < package_length; j++)
         {
             message[package_length*i + j] = *(buffer++);
         }
 
+        //Возвращаемся к первому элементу буфера
         buffer = buffer_;
         
-        //Если i < a-1 и b не равен нулю, то принимаем следующий пакет
+        //Если (i < (a-1)) или (b != 0), то принимаем следующий пакет
         if ((i < (a-1)) || (b != 0))
         {
             recieve = recv(client_socket, buffer, package_length, 0);
         }
 
+        //Проверяем, что сервер прислал ненулевые данные
         if (recieve == 0)
         {
-            buffer = buffer_;
+            //Удаляем буфер
             delete[] buffer;
 
             return -1;
         }
+        //Проверяем, что приём данных был завершён без ошибок
         if (recieve < 0)
         {
             std::cout << "[Error] Failed recieve data from server\n";
-            buffer = buffer_;
+            //Удаляем буфер
             delete[] buffer;
 
             return -1;
