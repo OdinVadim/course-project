@@ -181,6 +181,7 @@ int send_message(int client_socket, const std::vector<char>& message)
         if (send(client_socket, buffer, package_length, 0) < 0)
         {
             std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
+            delete[] buffer;
             return -1;
         }
     }
@@ -194,9 +195,11 @@ int send_message(int client_socket, const std::vector<char>& message)
     if (send(client_socket, buffer, b, 0) < 0)
     {
         std::cout << "[Error] Failed to send data to client " << client_socket << "\n";
+        delete[] buffer;
         return -1;
     }
 
+    delete[] buffer;
     return 0;
 }
 int recieve_message(int client_socket, std::vector<char>& message)
