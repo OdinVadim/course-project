@@ -22,7 +22,22 @@ int main()
 
     while (input != "close")
     {
-        send_message(client_socket, input);
+        int length = input.length() + 4;
+        char* send_c = new char[length];
+
+        send_c[0] = (length & 0xFF'00'00'00) >> 24;
+        send_c[1] = (length & 0x00'FF'00'00) >> 16;
+        send_c[2] = (length & 0x00'00'FF'00) >> 8;
+        send_c[3] = (length & 0x00'00'00'FF);
+
+        for (int i = 0; i < input.length(); i++)
+        {
+            send_c[i+4] = input[i];
+        }
+
+        std::string send = std::string(send_c, input.length() + 4);
+
+        send_message(client_socket, send);
 
         std::string message = "";
         while (message.length() == 0)

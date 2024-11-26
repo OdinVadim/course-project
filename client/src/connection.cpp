@@ -16,6 +16,9 @@
 const char* ip_address = "127.0.0.1";
 const char* port = "8080";
 
+//Максимальный размер передаваемого пакета
+const int package_length = 16383;
+
 int connect_to_server()
 {
     std::cout << "[Info] Connecting to server...\n";

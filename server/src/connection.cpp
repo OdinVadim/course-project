@@ -18,6 +18,9 @@ const char* port = "8080";
 //Размер очереди для полностью установленных соединений, ожидающих, пока процесс примет их
 const int backlog = 8;
 
+//Максимальный размер передаваемого пакета
+const int package_length = 16383;
+
 int start_server()
 {
     std::cout << "[Info] Starting the server...\n";
@@ -57,7 +60,7 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
             //Добавляем в этот список только обрабатываемый в текущий момент сокет
             FD_SET(socket, &fd_socket);
             //Устанавливаем нулевое время ожидания
-            timeval time_for_select = {0, 0}; 
+            timeval time_for_select = {0, 0};
 
             //Функция select возвращает количество сокетов из списка, доступных для чтения
             //Так как в списке только один сокет, select вернёт либо 0, либо 1, либо отрицательное значение, обозначающее ошибку
@@ -86,23 +89,38 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
             //Иначе читаем поступившие сообщения от клиента по этому сокету
             else
             {
-                std::string message;
-
-                if (recieve_message(socket, message) < 0)
+                char* message = recieve_message(socket);
+                if (message == nullptr)
                 {
                     disconnect_client(socket, socket_polling_list);
                     continue;
                 }
 
-                std::cout << "[Client: " << socket << "] " << message << "\n";
+                char* message_ = message;
+                std::cout << "[Client: " << socket << "] ";
 
+                int message_length = (*(message++) << 24) + (*(message++) << 16) + (*(message++) << 8) + (*(message++));
+
+                for (int i = 0; i < message_length - 4; i++)
+                {
+                    std::cout << *(message++);
+                }
+                std::cout << "\n";
+
+                message = message_;
                 send_message(socket, message);
-
+                message = message_ + 4;
                 if (message == exit_message)
                 {
                     std::cout << "[Info] Recieve exit message from client " << socket << "\n";
+                    message = message_;
+                    delete[] message;
+
                     return 1;
                 }
+
+                message = message_;
+                delete[] message;
             }
         }
     }
@@ -160,29 +178,76 @@ int send_message(int client_socket, const std::string& message)
 
     return 0;
 }
-int recieve_message(int client_socket, std::string& message)
-{
-    const int length = 128;
-    char* buffer = new char[length];
+char* recieve_message(int client_socket)
+{    
+    char* buffer = new char[package_length];
+    char* buffer_ = buffer;
 
-    int recieve = recv(client_socket, buffer, length, 0);
+    int recieve = recv(client_socket, buffer, package_length, 0);
 
     if (recieve == 0)
     {
         delete[] buffer;
-        return -1;
+        return nullptr;
     }
     if (recieve < 0)
     {
         std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
         delete[] buffer;
-        return -1;
+        return nullptr;
     }
 
-    message = std::string(buffer);
+    int message_length = (*buffer << 24);
+    buffer++;
+    message_length += (*buffer << 16);
+    buffer++;
+    message_length += (*buffer << 8);
+    buffer++;
+    message_length += (*buffer);
 
+    char* message = new char[message_length];
+
+    int a = message_length / package_length;
+    int b = message_length % package_length;
+    
+    buffer = buffer_;
+
+    for (int i = 0; i < a; i++)
+    {
+        for (int j = 0; j < a; j++)
+        {
+            message[package_length*i + j] = *(++buffer);
+        }
+
+        recieve = recv(client_socket, buffer, package_length, 0);
+
+        if (recieve == 0)
+        {
+            buffer = buffer_;
+            delete[] buffer;
+            delete[]message;
+
+            return nullptr;
+        }
+        if (recieve < 0)
+        {
+            std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
+            buffer = buffer_;
+            delete[] buffer;
+            delete[] message;
+
+            return nullptr;
+        }
+    }
+
+    for (int i = 0; i < b; i++)
+    {
+        message[package_length*a + i] = *(++buffer);
+    }
+    
+    buffer = buffer_;
     delete[] buffer;
-    return 0;
+    return message;
 }
 
 int create_server_socket()

@@ -19,7 +19,7 @@ void disconnect_client(int client_socket, fd_set* socket_polling_list);
 //Отправка сообщения клиенту
 int send_message(int client_socket, const std::string& message);
 //Приём сообщения от клиента
-int recieve_message(int client_socket, std::string& message);
+char* recieve_message(int client_socket);
 
 //Создание сокета
 int create_server_socket();
