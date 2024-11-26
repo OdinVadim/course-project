@@ -19,7 +19,7 @@ const char* port = "8080";
 const int backlog = 8;
 
 //Максимальный размер передаваемого пакета
-const int package_length = 16383;
+const int package_length = 16384;
 
 int start_server()
 {
@@ -203,17 +203,22 @@ int send_message(int client_socket, const std::vector<char>& message)
     return 0;
 }
 int recieve_message(int client_socket, std::vector<char>& message)
-{    
+{
+    //Создаём буфер, размер которого равен максимальноиу размеру одного пакета
     char* buffer = new char[package_length];
+    //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
 
+    //Принимаем первый пакет
     int recieve = recv(client_socket, buffer, package_length, 0);
 
+    //Проверяем, что клиент прислал ненулевые данные
     if (recieve == 0)
     {
         delete[] buffer;
         return -1;
     }
+    //Проверяем, что приём данных был завершён без ошибок
     if (recieve < 0)
     {
         std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
@@ -221,25 +226,37 @@ int recieve_message(int client_socket, std::vector<char>& message)
         return -1;
     }
 
+    //Считываем длину передаваемого сообщения
     unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
+    //Очищаем message и создаём новый vector<char> длиной передаваемого сообщения
     message.clear();
     message = std::vector<char>(message_length);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
     
+    //Возвращаемся к первому элементу буфера
     buffer = buffer_;
 
     for (int i = 0; i < a; i++)
     {
+        //Записываем пакет из буфера в message
         for (int j = 0; j < package_length; j++)
         {
             message[package_length*i + j] = *(buffer++);
         }
 
-        recieve = recv(client_socket, buffer, package_length, 0);
+        //Возвращаемся к первому элементу буфера
+        buffer = buffer_;
 
+        //Если i < a-1 и b не равен нулю, то принимаем следующий пакет
+        if ((i < (a-1)) || (b != 0))
+        {
+            recieve = recv(client_socket, buffer, package_length, 0);
+        }
+
+        //Проверяем, что клиент прислал ненулевые данные
         if (recieve == 0)
         {
             buffer = buffer_;
@@ -247,6 +264,7 @@ int recieve_message(int client_socket, std::vector<char>& message)
 
             return -1;
         }
+        //Проверяем, что приём данных был завершён без ошибок
         if (recieve < 0)
         {
             std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
@@ -257,12 +275,15 @@ int recieve_message(int client_socket, std::vector<char>& message)
         }
     }
 
+    //Записываем последний пакет из буфера в message
     for (int i = 0; i < b; i++)
     {
         message[package_length*a + i] = *(buffer++);
     }
     
+    //Возвращаемся к первому элементу буфера
     buffer = buffer_;
+    //Удаляем буфер
     delete[] buffer;
     return 0;
 }

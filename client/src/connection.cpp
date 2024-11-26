@@ -17,7 +17,7 @@ const char* ip_address = "127.0.0.1";
 const char* port = "8080";
 
 //Максимальный размер передаваемого пакета
-const int package_length = 16383;
+const int package_length = 16384;
 
 int connect_to_server()
 {
@@ -123,7 +123,13 @@ int recieve_message(int client_socket, std::vector<char>& message)
             message[package_length*i + j] = *(buffer++);
         }
 
-        recieve = recv(client_socket, buffer, package_length, 0);
+        buffer = buffer_;
+        
+        //Если i < a-1 и b не равен нулю, то принимаем следующий пакет
+        if ((i < (a-1)) || (b != 0))
+        {
+            recieve = recv(client_socket, buffer, package_length, 0);
+        }
 
         if (recieve == 0)
         {
@@ -142,12 +148,15 @@ int recieve_message(int client_socket, std::vector<char>& message)
         }
     }
 
+    //Записываем последний пакет из буфера в message
     for (int i = 0; i < b; i++)
     {
         message[package_length*a + i] = *(buffer++);
     }
     
+    //Возвращаемся к первому элементу буфера
     buffer = buffer_;
+    //Удаляем буфер
     delete[] buffer;
     return 0;
 }
