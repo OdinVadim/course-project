@@ -23,26 +23,33 @@ int main()
     while (input != "close")
     {
         int length = input.length() + 4;
-        char* send_c = new char[length];
 
-        send_c[0] = (length & 0xFF'00'00'00) >> 24;
-        send_c[1] = (length & 0x00'FF'00'00) >> 16;
-        send_c[2] = (length & 0x00'00'FF'00) >> 8;
-        send_c[3] = (length & 0x00'00'00'FF);
+        std::vector<char> send = std::vector<char>(length);
 
-        for (int i = 0; i < input.length(); i++)
+        send[0] = (length & 0xFF'00'00'00) >> 24;
+        send[1] = (length & 0x00'FF'00'00) >> 16;
+        send[2] = (length & 0x00'00'FF'00) >> 8;
+        send[3] = (length & 0x00'00'00'FF);
+
+        for (int i = 0; i < (length - 4); i++)
         {
-            send_c[i+4] = input[i];
+            send[i+4] = input[i];
         }
-
-        std::string send = std::string(send_c, input.length() + 4);
 
         send_message(client_socket, send);
 
         std::vector<char> message;
         recieve_message(client_socket, message);
 
-        cout << "[Server] " << (message.data() + 4) << "\n";
+        std::cout << "[Server] ";
+
+        int message_length = (message[0] << 24) + (message[1] << 16) + (message[2] << 8) + (message[3]);
+
+        for (int i = 0; i < message_length - 4; i++)
+        {
+            std::cout << message[i + 4];
+        }
+        std::cout << "\n";
 
         std::cin >> input;
     }

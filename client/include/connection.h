@@ -2,7 +2,6 @@
 #define CLIENT_CONNECTION_H
 
 #include <vector>
-#include <string>
 
 //Подключение к серверу
 int connect_to_server();
@@ -10,7 +9,7 @@ int connect_to_server();
 void disconnect_from_server(int client_socket);
 
 //Отправка сообщение серверу
-int send_message(int client_socket, const std::string& message);
+int send_message(int client_socket, const std::vector<char>& message);
 //Приём сообщения от сервера
 int recieve_message(int client_socket, std::vector<char>& message);
 

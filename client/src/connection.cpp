@@ -45,11 +45,40 @@ void disconnect_from_server(int client_socket)
     return;
 }
 
-int send_message(int client_socket, const std::string& message)
+int send_message(int client_socket, const std::vector<char>& message)
 {
-    if (send(client_socket, message.data(), message.size(), 0) < 0)
+    char* buffer = new char[package_length];
+    char* buffer_ = buffer;
+
+    unsigned int message_length = message.size();
+
+    int a = message_length / package_length;
+    int b = message_length % package_length;
+
+    for (int i = 0; i < a; i++)
     {
-        std::cout << "[Error] Failed to send data to server" << "\n";
+        for (int j = 0; j < package_length; j++)
+        {
+            *(buffer++) = message[i*package_length + j];
+        }
+
+        buffer = buffer_;
+        if (send(client_socket, buffer, package_length, 0) < 0)
+        {
+            std::cout << "[Error] Failed to send data to server\n";
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < b; i++)
+    {
+        *(buffer++) = message[package_length*a + i];
+    }
+
+    buffer = buffer_;
+    if (send(client_socket, buffer, b, 0) < 0)
+    {
+        std::cout << "[Error] Failed to send data to server\n";
         return -1;
     }
 
