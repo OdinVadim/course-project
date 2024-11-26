@@ -89,38 +89,30 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
             //Иначе читаем поступившие сообщения от клиента по этому сокету
             else
             {
-                char* message = recieve_message(socket);
-                if (message == nullptr)
+                std::vector<char> message;
+                if (recieve_message(message, socket) < 0)
                 {
                     disconnect_client(socket, socket_polling_list);
                     continue;
                 }
 
-                char* message_ = message;
                 std::cout << "[Client: " << socket << "] ";
 
-                int message_length = (*(message++) << 24) + (*(message++) << 16) + (*(message++) << 8) + (*(message++));
+                int message_length = (message[0] << 24) + (message[1] << 16) + (message[2] << 8) + (message[3]);
 
                 for (int i = 0; i < message_length - 4; i++)
                 {
-                    std::cout << *(message++);
+                    std::cout << message[i + 4];
                 }
                 std::cout << "\n";
 
-                message = message_;
-                send_message(socket, message);
-                message = message_ + 4;
-                if (message == exit_message)
+                send_message(socket, message.data() + 4);
+                if ((message.data() + 4) == exit_message)
                 {
                     std::cout << "[Info] Recieve exit message from client " << socket << "\n";
-                    message = message_;
-                    delete[] message;
 
                     return 1;
                 }
-
-                message = message_;
-                delete[] message;
             }
         }
     }
@@ -178,7 +170,7 @@ int send_message(int client_socket, const std::string& message)
 
     return 0;
 }
-char* recieve_message(int client_socket)
+int recieve_message(std::vector<char>& message, int client_socket)
 {    
     char* buffer = new char[package_length];
     char* buffer_ = buffer;
@@ -188,24 +180,18 @@ char* recieve_message(int client_socket)
     if (recieve == 0)
     {
         delete[] buffer;
-        return nullptr;
+        return -1;
     }
     if (recieve < 0)
     {
         std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
         delete[] buffer;
-        return nullptr;
+        return -1;
     }
 
-    int message_length = (*buffer << 24);
-    buffer++;
-    message_length += (*buffer << 16);
-    buffer++;
-    message_length += (*buffer << 8);
-    buffer++;
-    message_length += (*buffer);
+    int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
-    char* message = new char[message_length];
+    message = std::vector<char>(message_length);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
@@ -216,7 +202,7 @@ char* recieve_message(int client_socket)
     {
         for (int j = 0; j < a; j++)
         {
-            message[package_length*i + j] = *(++buffer);
+            message[package_length*i + j] = *(buffer++);
         }
 
         recieve = recv(client_socket, buffer, package_length, 0);
@@ -225,29 +211,27 @@ char* recieve_message(int client_socket)
         {
             buffer = buffer_;
             delete[] buffer;
-            delete[]message;
 
-            return nullptr;
+            return -1;
         }
         if (recieve < 0)
         {
             std::cout << "[Error] Failed recieve data from client " << client_socket << "\n";
             buffer = buffer_;
             delete[] buffer;
-            delete[] message;
 
-            return nullptr;
+            return -1;
         }
     }
 
     for (int i = 0; i < b; i++)
     {
-        message[package_length*a + i] = *(++buffer);
+        message[package_length*a + i] = *(buffer++);
     }
     
     buffer = buffer_;
     delete[] buffer;
-    return message;
+    return 0;
 }
 
 int create_server_socket()

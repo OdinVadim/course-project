@@ -2,6 +2,7 @@
 #define SERVER_CONNECTION_H
 
 #include <string>
+#include <vector>
 
 //Запуск сервера
 int start_server();
@@ -19,7 +20,7 @@ void disconnect_client(int client_socket, fd_set* socket_polling_list);
 //Отправка сообщения клиенту
 int send_message(int client_socket, const std::string& message);
 //Приём сообщения от клиента
-char* recieve_message(int client_socket);
+int recieve_message(std::vector<char>& message, int client_socket);
 
 //Создание сокета
 int create_server_socket();
