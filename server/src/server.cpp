@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 
+#include "server.h"
 //Подключаем заголовочный файл с реализацией взаимодействия клиента и сервера
 #include "connection.h"
 #include "sorts.h"
@@ -10,6 +11,11 @@
 #endif /*WIN*/
 
 using namespace std;
+
+int handle_message(int socket, const std::vector<char>& message)
+{
+    return 0;
+}
 
 int main()
 {
