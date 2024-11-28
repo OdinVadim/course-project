@@ -3,7 +3,7 @@
 
 #include <vector>
 
-void selectionSort(std::vector<int>& arr);
-void shellSort(std::vector<int>& arr);
+void selection_sort(std::vector<int>& arr);
+void shell_sort(std::vector<int>& arr);
 
 #endif //SORTS_H

@@ -5,7 +5,7 @@
 
 using namespace std;
 
-void selectionSort(vector<int>& arr)
+void selection_sort(vector<int>& arr)
 {
     int n = arr.size();
     for (int i = 0;i < n - 1; i++)
@@ -24,7 +24,7 @@ void selectionSort(vector<int>& arr)
         }
     }
 }
-void shellSort(vector<int>& arr)
+void shell_sort(vector<int>& arr)
 {
     int n = arr.size();
     int gap = n / 2;
