@@ -1,12 +1,34 @@
 #include "connection.h"
 
-//Подключаем заголовочный файл, который предоставляет реализацию сокетов на Unix-системах
+#ifdef WIN
+
+//Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Windows
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+//А надо?
+#pragma comment(lib, "ws2_32.lib")
+
+//Определяем закрытие функции на Windows
+#define CLOSE(s) closesocket(s)
+//Определяем проверку сокета на Windows
+#define IS_VALID(s) (s != INVALID_SOCKET)
+
+#endif /*WIN*/
+
 #ifdef UNIX
 
+//Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Unix-системах
 #include <sys/socket.h> 
 #include <netdb.h>
-
 #include <unistd.h>
+
+//Определяем закрытие функции на UNIX-системах
+#define CLOSE(s) close(s)
+//Определяем проверку сокета на UNIX-системах
+#define IS_VALID(s) (s >= 0)
+
+#endif /*UNIX*/
 
 #include <iostream>
 //Файл, содержащий функцию memset()
@@ -22,11 +44,24 @@ const int package_length = 16384;
 int connect_to_server()
 {
     std::cout << "[Info] Connecting to server...\n";
+
+    #ifdef WIN
+
+    //Инициализация Windows Socket API
+    WSADATA d;
+    if (WSAStartup(MAKEWORD(2, 2), &d))
+    {
+        std::cout << "[Error] Failed to initialize WinSockAPI\n";
+        return -1;
+    }
+
+    #endif /*WIN*/
+
     //Создаём сокет клиента
     int client_socket = create_socket();
 
     //Проверяем созданный сокет клиента
-    if (client_socket < 0)
+    if (!IS_VALID(client_socket))
     {
         return -1;
     }
@@ -39,7 +74,7 @@ void disconnect_from_server(int client_socket)
 {
     std::cout << "[Info] Disconnecting from server...\n";
     //Закрываем сокет
-    close(client_socket);
+    CLOSE(client_socket);
     std::cout << "[Info] Disconnected from server\n";
 
     return;
@@ -219,7 +254,7 @@ int create_socket()
     int client_socket = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
 
     //Проверяем созданный сокет
-    if (client_socket < 0)
+    if (!IS_VALID(client_socket))
     {
         std::cout << "[Error] Failed to create server_socket\n";
 
@@ -241,5 +276,3 @@ int create_socket()
 
     return client_socket;
 }
-
-#endif /*UNIX*/

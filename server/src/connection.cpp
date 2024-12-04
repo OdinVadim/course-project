@@ -1,11 +1,34 @@
 #include "connection.h"
 
+#ifdef WIN
+
+//Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Windows
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+//А надо?
+#pragma comment(lib, "ws2_32.lib")
+
+//Определяем закрытие функции на Windows
+#define CLOSE(s) closesocket(s)
+//Определяем проверку сокета на Windows
+#define IS_VALID(s) (s != INVALID_SOCKET)
+
+#endif /*WIN*/
+
 #ifdef UNIX
 
 //Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Unix-системах
 #include <sys/socket.h> 
 #include <netdb.h>
 #include <unistd.h>
+
+//Определяем закрытие функции на UNIX-системах
+#define CLOSE(s) close(s)
+//Определяем проверку сокета на UNIX-системах
+#define IS_VALID(s) (s >= 0)
+
+#endif /*UNIX*/
 
 #include <iostream>
 //Файл, содержащий функцию memset()
@@ -25,10 +48,22 @@ int start_server()
 {
     std::cout << "[Info] Starting the server...\n";
 
+    #ifdef WIN
+
+    //Инициализация Windows Socket API
+    WSADATA d;
+    if (WSAStartup(MAKEWORD(2, 2), &d))
+    {
+        std::cout << "[Error] Failed to initialize WinSockAPI\n";
+        return -1;
+    }
+
+    #endif /*WIN*/
+
     //Создаём сокет сервера
     int server_socket = create_server_socket();
     //Проверяем созданный сокет сервера
-    if (server_socket < 0)
+    if (!IS_VALID(server_socket))
     {
         return -1;
     }
@@ -41,7 +76,7 @@ void shutdown_server(int server_socket)
 {
     std::cout << "[Info] Shutting down the server...\n";
     //Закрываем сокет
-    close(server_socket);
+    CLOSE(server_socket);
     std::cout << "[Info] The server is shut down\n";
 }
 
@@ -129,7 +164,7 @@ int connect_client(int server_socket, fd_set* socket_polling_list, int& max_sock
     int client_socket = accept(server_socket, reinterpret_cast<sockaddr*>(&address), &address_len);
 
     //Проверяем созданный сокет клиента
-    if (client_socket < 0)
+    if (!IS_VALID(client_socket))
     {
         std::cout << "[Error] Failed to connect client\n";
         return -1;
@@ -151,7 +186,7 @@ int connect_client(int server_socket, fd_set* socket_polling_list, int& max_sock
 void disconnect_client(int client_socket, fd_set* socket_polling_list)
 {
     //Закрываем сокет клиента
-    close(client_socket);
+    CLOSE(client_socket);
     //Удаляем сокет из списка опрашиваемых сокетов
     FD_CLR(client_socket, socket_polling_list);
 
@@ -334,7 +369,7 @@ int create_server_socket()
     int server_socket = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
 
     //Проверяем созданный сокет
-    if (server_socket < 0)
+    if (!IS_VALID(server_socket))
     {
         std::cout << "[Error] Failed to create server_socket\n";
 
@@ -356,8 +391,16 @@ int create_server_socket()
     //Освобождаем память от address
     freeaddrinfo(address);
 
-    //Настраиваем сокет
+    //На Windows необходим указатель на char
+    #ifdef WIN
+    char yes = 1;
+    #endif /*WIN*/
+    //На Unix-системах необходим указатель на int
+    #ifdef UNIX
     int yes = 1;
+    #endif /*UNIX*/
+
+    //Настраиваем сокет
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
     {
         std::cout << "[Error] Failed to set server_socket options\n";
@@ -374,5 +417,3 @@ int create_server_socket()
     //Возвращаем созданный сокет
     return server_socket;
 }
-
-#endif /*UNIX*/
