@@ -39,7 +39,7 @@ const char* ip_address = "127.0.0.1";
 const char* port = "8080";
 
 //Максимальный размер передаваемого пакета
-const int package_length = 16384;
+const int package_length = 8;
 //Количество байт, выделяемое под длину сообщения
 const unsigned int lengths_bytes = 4;
 
@@ -128,7 +128,7 @@ int send_message(int client_socket, const std::vector<char>& message)
         }
     }
 
-    //Записываем неполный пакет из message в буфер
+    //Записываем не полный пакет из message в буфер
     for (int i = 0; i < b - buffer_lengths_bytes; i++)
     {
         *(buffer++) = message[a*package_length + i + buffer_lengths_bytes - lengths_bytes];
@@ -229,7 +229,7 @@ int recieve_message(int client_socket, std::vector<char>& message)
         }
     }
 
-    //Записываем последний пакет из буфера в message
+    //Записываем не полный пакет из буфера в message
     for (int i = 0; i < b - buffer_lengths_bytes; i++)
     {
         message[package_length*a + i + buffer_lengths_bytes - lengths_bytes] = *(buffer++);

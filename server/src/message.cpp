@@ -23,13 +23,11 @@ enum class server_command
 
 int handle_message(int socket, const std::vector<char> message)
 {
+    //выводим сообщение от клиента
     std::cout << "[Client: " << socket << "] ";
-
-    int message_length = (message[0] << 24) + (message[1] << 16) + (message[2] << 8) + (message[3]);
-
-    for (int i = 0; i < message_length - 4; i++)
+    for (int i = 0; i < message.size(); i++)
     {
-        std::cout << message[i + 4];
+        std::cout << message[i];
     }
     std::cout << "\n";
 
