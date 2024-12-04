@@ -40,6 +40,8 @@ const char* port = "8080";
 
 //Максимальный размер передаваемого пакета
 const int package_length = 16384;
+//
+const unsigned int lengths_bytes = 4;
 
 int connect_to_server()
 {
@@ -87,8 +89,16 @@ int send_message(int client_socket, const std::vector<char>& message)
      //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
 
+    //Количество байт, выделяемое под длину сообщения в текущем буфере
+    unsigned int buffer_lengths_bytes = lengths_bytes;
     //Длина передаваемого сообщения
-    unsigned int message_length = message.size();
+    unsigned int message_length = message.size() + buffer_lengths_bytes;
+
+    //Записываем в буфер длину передаваемого сообщения
+    *(buffer++) = (message_length & 0xFF00'0000) >> 24;
+    *(buffer++) = (message_length & 0x00FF'0000) >> 16;
+    *(buffer++) = (message_length & 0x0000'FF00) >> 8;
+    *(buffer++) = (message_length & 0x0000'00FF);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
@@ -97,10 +107,13 @@ int send_message(int client_socket, const std::vector<char>& message)
     for (int i = 0; i < a; i++)
     {
         //Записываем пакет из message в буфер
-        for (int j = 0; j < package_length; j++)
+        for (int j = 0; j < package_length - buffer_lengths_bytes; j++)
         {
-            *(buffer++) = message[i*package_length + j];
+            *(buffer++) = message[i*package_length + j + buffer_lengths_bytes - lengths_bytes];
         }
+
+        //Память под длину сообщения выделяется только в первом буфере
+        buffer_lengths_bytes = 0;
 
         //Возвращаемся к первому элементу буфера
         buffer = buffer_;
@@ -116,9 +129,9 @@ int send_message(int client_socket, const std::vector<char>& message)
     }
 
     //Записываем неполный пакет из message в буфер
-    for (int i = 0; i < b; i++)
+    for (int i = 0; i < package_length - buffer_lengths_bytes; i++)
     {
-        *(buffer++) = message[package_length*a + i];
+        *(buffer++) = message[a*package_length + i + buffer_lengths_bytes - lengths_bytes];
     }
 
     //Возвращаемся к первому элементу буфера

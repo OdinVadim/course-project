@@ -15,25 +15,22 @@ int handle_command(int socket, const std::string& command)
     //Выключение сервера
     else if (command == "exit")
     {
-        std::vector<char> exit = { 0x00, 0x00, 0x00, 0x08, 'e', 'x', 'i', 't' };
+        std::vector<char> exit = { 'e', 'x', 'i', 't' };
         send_message(socket, exit);
 
         return -1;
     }
-    else
+    //Эхо
+    else if (command == "echo")
     {
-        int length = command.length() + 4;
+        std::string input;
+        std::cin >> input;
 
-        std::vector<char> send = std::vector<char>(length);
+        std::vector<char> send = std::vector<char>(input.length());
 
-        send[0] = (length & 0xFF'00'00'00) >> 24;
-        send[1] = (length & 0x00'FF'00'00) >> 16;
-        send[2] = (length & 0x00'00'FF'00) >> 8;
-        send[3] = (length & 0x00'00'00'FF);
-
-        for (int i = 0; i < (length - 4); i++)
+        for (int i = 0; i < input.length(); i++)
         {
-            send[i+4] = command[i];
+            send[i] = input[i];
         }
 
         send_message(socket, send);
@@ -50,6 +47,10 @@ int handle_command(int socket, const std::string& command)
             std::cout << message[i + 4];
         }
         std::cout << "\n";
+    }
+    else
+    {
+        cout << "[Client] " << command << " is unknown command\n";
     }
 
     return 0;
