@@ -1,8 +1,8 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 #include <vector>
 
 int handle_message(int socket, const std::vector<char> message);
 
-#endif /*SERVER_H*/
+#endif /*MESSAGE_H*/

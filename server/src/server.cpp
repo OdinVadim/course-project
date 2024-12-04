@@ -1,21 +1,14 @@
 #include <iostream>
 #include <vector>
 
-#include "server.h"
-//Подключаем заголовочный файл с реализацией взаимодействия клиента и сервера
+//Подключаем заголовочный файл с объявлениями взаимодействия клиента и сервера
 #include "connection.h"
-#include "sorts.h"
 
 #ifdef WIN
 #include "h.h"
 #endif /*WIN*/
 
 using namespace std;
-
-int handle_message(int socket, const std::vector<char>& message)
-{
-    return 0;
-}
 
 int main()
 {

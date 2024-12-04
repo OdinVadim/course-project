@@ -5,10 +5,25 @@
 
 #include "connection.h"
 
+//Список команд сервера
+enum class server_command
+{
+    exit = 0,
+    echo = 1,
+
+    linear_search = 0b0001'0000,
+    sentinel_linear_search = 0b0001'0001,
+    binary_search = 0b0001'0010,
+    linear_search_with_sort = 0b0001'0011,
+
+    selection_sort = 0b0010'0000,
+    shell_sort = 0b0010'0001
+};
+
 void command_exit(int socket)
 {
-    std::vector<char> exit = { 'e', 'x', 'i', 't' };
-    send_message(socket, exit);
+    std::vector<char> message = { char(server_command::exit) };
+    send_message(socket, message);
 
     return;
 }
@@ -19,11 +34,14 @@ int command_echo(int socket)
     std::string input;
     std::cin >> input;
 
-    //Записываем сообщение в vector<char>
-    std::vector<char> message = std::vector<char>(input.length());
+    //Создаём vector<char> message
+    std::vector<char> message = std::vector<char>(input.length() + 1);
+
+    //Записываем сообщение в message
+    message[0] = char(server_command::echo);
     for (int i = 0; i < input.length(); i++)
     {
-        message[i] = input[i];
+        message[i + 1] = input[i];
     }
 
     //Отправляем сообщение на сервер

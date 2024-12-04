@@ -33,6 +33,8 @@
 //Файл, содержащий функцию memset()
 #include <cstring>
 
+#include "message.h"
+
 //IP-адрес и номер порта
 const char* ip_address = "127.0.0.1";
 const char* port = "8080";
@@ -120,7 +122,7 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
                     return -1;
                 }
             }
-            //Иначе читаем поступившие сообщения от клиента по этому сокету
+            //Иначе обрабатываем сообщение, полученное от этого сокета
             else
             {
                 std::vector<char> message;
@@ -130,41 +132,9 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
                     continue;
                 }
 
-                std::cout << "[Client: " << socket << "] ";
-
-                int message_length = (message[0] << 24) + (message[1] << 16) + (message[2] << 8) + (message[3]);
-
-                for (int i = 0; i < message_length - 4; i++)
+                if (handle_message(socket, message) < 0)
                 {
-                    std::cout << message[i + 4];
-                }
-                std::cout << "\n";
-
-                send_message(socket, message);
-
-                bool is_exit = true;
-
-                if ((message.size() - 4) == exit_message.size())
-                {
-                    for (int i = 0; i < exit_message.size(); i++)
-                    {
-                        if (message[4+i] != exit_message[i])
-                        {
-                            is_exit = false;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    is_exit = false;
-                }
-
-                if (is_exit)
-                {
-                    std::cout << "[Info] Recieve exit message from client " << socket << "\n";
-
-                    return 1;
+                    return -1;
                 }
             }
         }
