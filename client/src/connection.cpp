@@ -40,7 +40,7 @@ const char* port = "8080";
 
 //Максимальный размер передаваемого пакета
 const int package_length = 16384;
-//
+//Количество байт, выделяемое под длину сообщения
 const unsigned int lengths_bytes = 4;
 
 int connect_to_server()
@@ -89,7 +89,7 @@ int send_message(int client_socket, const std::vector<char>& message)
      //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
 
-    //Количество байт, выделяемое под длину сообщения в текущем буфере
+    //Количество байт, выделяемое под длину сообщения в текущем пакете
     unsigned int buffer_lengths_bytes = lengths_bytes;
     //Длина передаваемого сообщения
     unsigned int message_length = message.size() + buffer_lengths_bytes;
@@ -112,7 +112,7 @@ int send_message(int client_socket, const std::vector<char>& message)
             *(buffer++) = message[i*package_length + j + buffer_lengths_bytes - lengths_bytes];
         }
 
-        //Память под длину сообщения выделяется только в первом буфере
+        //Во втором и последующих пакетах память под длину сообщения не выделяется
         buffer_lengths_bytes = 0;
 
         //Возвращаемся к первому элементу буфера
@@ -129,7 +129,7 @@ int send_message(int client_socket, const std::vector<char>& message)
     }
 
     //Записываем неполный пакет из message в буфер
-    for (int i = 0; i < package_length - buffer_lengths_bytes; i++)
+    for (int i = 0; i < b - buffer_lengths_bytes; i++)
     {
         *(buffer++) = message[a*package_length + i + buffer_lengths_bytes - lengths_bytes];
     }
@@ -176,28 +176,30 @@ int recieve_message(int client_socket, std::vector<char>& message)
         return -1;
     }
 
+    //Количество байт, выделяемое под длину сообщения в текущем пакете
+    unsigned int buffer_lengths_bytes = lengths_bytes;
     //Считываем длину передаваемого сообщения
     unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
 
     //Очищаем message
     message.clear();
-    //Создаём новый vector<char>, длина которого равняется длине передаваемого сообщения
-    message = std::vector<char>(message_length);
+    //Создаём новый vector<char>, длина которого равняется длине передаваемого сообщения без байтов, выделяемых под длину сообщения
+    message = std::vector<char>(message_length - lengths_bytes);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
-    
-    //Возвращаемся к первому элементу буфера
-    buffer = buffer_;
 
     //Принимаем полностью заполненные пакеты
     for (int i = 0; i < a; i++)
     {
         //Записываем пакет из буфера в message
-        for (int j = 0; j < package_length; j++)
+        for (int j = 0; j < package_length - buffer_lengths_bytes; j++)
         {
-            message[package_length*i + j] = *(buffer++);
+            message[package_length*i + j + buffer_lengths_bytes - lengths_bytes] = *(buffer++);
         }
+
+        //Во втором и последующих пакетах память под длину сообщения не выделяется
+        buffer_lengths_bytes = 0;
 
         //Возвращаемся к первому элементу буфера
         buffer = buffer_;
@@ -228,9 +230,9 @@ int recieve_message(int client_socket, std::vector<char>& message)
     }
 
     //Записываем последний пакет из буфера в message
-    for (int i = 0; i < b; i++)
+    for (int i = 0; i < b - buffer_lengths_bytes; i++)
     {
-        message[package_length*a + i] = *(buffer++);
+        message[package_length*a + i + buffer_lengths_bytes - lengths_bytes] = *(buffer++);
     }
     
     //Возвращаемся к первому элементу буфера

@@ -23,28 +23,29 @@ int handle_command(int socket, const std::string& command)
     //Эхо
     else if (command == "echo")
     {
+        //Ввод сообщения от пользователя
         std::string input;
         std::cin >> input;
 
-        std::vector<char> send = std::vector<char>(input.length());
-
+        //Записываем сообщение в vector<char>
+        std::vector<char> message = std::vector<char>(input.length());
         for (int i = 0; i < input.length(); i++)
         {
-            send[i] = input[i];
+            message[i] = input[i];
         }
 
-        send_message(socket, send);
+        //Отправляем сообщение на сервер
+        send_message(socket, message);
 
-        std::vector<char> message;
+        //Очищаем сообщение и принимаем его с сервера
+        message.clear();
         recieve_message(socket, message);
 
+        //Выводим полученное сообщение
         std::cout << "[Server] ";
-
-        int message_length = (message[0] << 24) + (message[1] << 16) + (message[2] << 8) + (message[3]);
-
-        for (int i = 0; i < message_length - 4; i++)
+        for (int i = 0; i < message.size(); i++)
         {
-            std::cout << message[i + 4];
+            std::cout << message[i];
         }
         std::cout << "\n";
     }
