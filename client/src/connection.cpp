@@ -39,7 +39,7 @@ const char* ip_address = "127.0.0.1";
 const char* port = "8080";
 
 //Максимальный размер передаваемого пакета
-const int package_length = 8;
+const int package_length = 16384;
 //Количество байт, выделяемое под длину сообщения
 const unsigned int lengths_bytes = 4;
 

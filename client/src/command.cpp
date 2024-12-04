@@ -11,13 +11,17 @@ enum class server_command
     exit = 0,
     echo = 1,
 
-    linear_search = 0b0001'0000,
-    sentinel_linear_search = 0b0001'0001,
-    binary_search = 0b0001'0010,
-    linear_search_with_sort = 0b0001'0011,
+    search = 0b0001'0000,
 
-    selection_sort = 0b0010'0000,
-    shell_sort = 0b0010'0001
+    linear_search = 0b0001'0001,
+    sentinel_linear_search = 0b0001'0010,
+    binary_search = 0b0001'0011,
+    linear_search_with_sort = 0b0001'0100,
+
+    sort = 0b0010'0000,
+
+    selection_sort = 0b0010'0001,
+    shell_sort = 0b0010'0010
 };
 
 void command_exit(int socket)
