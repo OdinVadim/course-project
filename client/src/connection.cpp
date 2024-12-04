@@ -139,7 +139,7 @@ int send_message(int client_socket, const std::vector<char>& message)
 }
 int recieve_message(int client_socket, std::vector<char>& message)
 {
-    //Создаём буфер, размер которого равен максимальноиу размеру одного пакета
+    //Создаём буфер, размер которого равен максимальному размеру одного пакета
     char* buffer = new char[package_length];
     //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;

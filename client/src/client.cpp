@@ -57,8 +57,6 @@ int handle_command(int socket, const std::string& command)
 
 int main()
 {
-#ifdef UNIX
-
     int client_socket = connect_to_server();
 
     if (client_socket < 0)
@@ -75,12 +73,5 @@ int main()
     }
 
     disconnect_from_server(client_socket);
-
-#endif /*UNIX*/
-#ifdef WIN
-    cout << "It's client\n";
-    cout << "On Windows\n";
-#endif /*WIN*/
-
     return 0;
 }

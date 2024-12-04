@@ -19,8 +19,6 @@ int handle_message(int socket, const std::vector<char>& message)
 
 int main()
 {
-#ifdef UNIX
-
     int server_socket = start_server();
     int max_socket = server_socket;
 
@@ -35,11 +33,6 @@ int main()
     while (handle_connection(server_socket, &socket_polling_list, max_socket, "exit") == 0);
 
     shutdown_server(server_socket);
-
-#endif /*UNIX*/
-#ifdef WIN
-    cout << "It's server " << kafedra << "\n";
-#endif /*WIN*/
 
     return 0;
 }

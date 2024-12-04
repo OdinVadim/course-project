@@ -4,6 +4,13 @@
 #include <string>
 #include <vector>
 
+#ifdef WIN
+
+//Подключаем заголовочный файл, который необходим для взаимодействия с сокетами на Windows и который содержит определение fd_set
+#include <winsock2.h>
+
+#endif /*WIN*/
+
 //Запуск сервера
 int start_server();
 //Выключение сервера

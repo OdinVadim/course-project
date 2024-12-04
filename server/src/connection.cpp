@@ -2,11 +2,10 @@
 
 #ifdef WIN
 
-//Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Windows
-#include <winsock2.h>
+//Подключаем ещё один заголовочный файл, который необходим для взаимодействия с сокетами на Windows
 #include <ws2tcpip.h>
 
-//А надо?
+//Строка, необходимая для компилятора Visual Studio, подключает библиотеку ws2_32.lib
 #pragma comment(lib, "ws2_32.lib")
 
 //Определяем закрытие функции на Windows
@@ -142,7 +141,26 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
                 std::cout << "\n";
 
                 send_message(socket, message);
-                if ((message.data() + 4) == exit_message)
+
+                bool is_exit = true;
+
+                if ((message.size() - 4) == exit_message.size())
+                {
+                    for (int i = 0; i < exit_message.size(); i++)
+                    {
+                        if (message[4+i] != exit_message[i])
+                        {
+                            is_exit = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    is_exit = false;
+                }
+
+                if (is_exit)
                 {
                     std::cout << "[Info] Recieve exit message from client " << socket << "\n";
 
@@ -254,7 +272,7 @@ int send_message(int client_socket, const std::vector<char>& message)
 }
 int recieve_message(int client_socket, std::vector<char>& message)
 {
-    //Создаём буфер, размер которого равен максимальноиу размеру одного пакета
+    //Создаём буфер, размер которого равен максимальному размеру одного пакета
     char* buffer = new char[package_length];
     //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
