@@ -1,9 +1,13 @@
 #include "command.h"
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 #include "connection.h"
+
+//Размер целого числа в байтах
+const int int_size = 4;
 
 //Список команд сервера
 enum class server_command
@@ -72,6 +76,96 @@ int command_echo(int socket)
     return 0;
 }
 
+int command_sort(int socket)
+{
+    //Ввод пути файла
+    std::string file_name;
+    std::cin >> file_name;
+
+    //Открываем файл
+    std::fstream file;
+    file.open(file_name);
+
+    //Проверяем, открылся ли файл
+    if(!file.is_open())
+    {
+        std::cout << "[Error] Failed to open file " << file_name << "\n";
+        return 0;
+    }
+
+    //Размер файла
+    unsigned int file_size = 0;
+
+    //Вычисляем размер файла
+    while(!file.eof())
+    {
+        int b;
+        file >> b;
+
+        file_size++;
+    }
+
+    //Возвращаемся к началу файла
+    file.clear();
+    file.seekg(0, std::ios::beg);
+
+    //Создаём сообщение message, которое будет передано на сервер
+    std::vector<char> message = std::vector<char>(file_size*int_size + 1);
+
+    //Записываем массив чисел в message
+    for (int i = 0; i < file_size; i++)
+    {
+        int b;
+        file >> b;
+
+        message[i*int_size + 1] = (b & 0xFF00'0000) >> 24;
+        message[i*int_size + 2] = (b & 0x00FF'0000) >> 16;
+        message[i*int_size + 3] = (b & 0x0000'FF00) >> 8;
+        message[i*int_size + 4] = (b & 0x0000'00FF);
+    }
+
+    std::string method;
+    std::cin >> method;
+
+    if (method == "selection")
+    {
+        message[0] = char(server_command::selection_sort);
+    }
+    else if (method == "shell")
+    {
+        message[0] = char(server_command::shell_sort);
+    }
+    else
+    {
+        std::cout << "[Client] " << method << " is unknown method\n";
+        return 0;
+    }
+
+    if (send_message(socket, message) < 0)
+    {
+        return -1;
+    }
+
+    message.clear();
+    if (recieve_message(socket, message) < 0)
+    {
+        return -1;
+    }
+
+    for (int i = 0; i < message.size() / int_size; i++)
+    {
+        std::cout << "[Server] Array:";
+
+        int b;
+        b = (message[int_size*i] << 24) + (message[int_size*i + 1] << 16) + (message[int_size*i + 2] << 8) + (message[int_size*i + 3]);
+
+        std::cout << " " << b;
+    }
+    std::cout << "\n";
+
+    return 0;
+}
+
 int handle_command(int socket, const std::string& command)
 {
     //Выключение клиента
@@ -90,6 +184,12 @@ int handle_command(int socket, const std::string& command)
     {
         return command_echo(socket);
     }
+    //Сортировка
+    else if (command == "sort")
+    {
+        return command_sort(socket);
+    }
+    //Неизвестная команда
     else
     {
         std::cout << "[Client] " << command << " is unknown command\n";
