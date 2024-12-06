@@ -109,6 +109,7 @@ int command_sort(int socket)
         if (file.fail())
         {
             std::cout << "[Error] File contains uncorrect data\n";
+            return 0;
         }
         file_size++;
     }
@@ -131,6 +132,9 @@ int command_sort(int socket)
         message[i*int_size + 3] = (b & 0x0000'FF00) >> 8;
         message[i*int_size + 4] = (b & 0x0000'00FF);
     }
+
+    //Закрываем файл
+    file.close();
 
     if (method == "selection")
     {
