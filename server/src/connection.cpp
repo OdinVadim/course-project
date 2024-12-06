@@ -283,7 +283,12 @@ int recieve_message(int client_socket, std::vector<char>& message)
     //Количество байт, выделяемое под длину сообщения в текущем пакете
     unsigned int buffer_lengths_bytes = lengths_bytes;
     //Считываем длину передаваемого сообщения
-    unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
+    unsigned char a1 = *(buffer++);
+    unsigned char a2 = *(buffer++);
+    unsigned char a3 = *(buffer++);
+    unsigned char a4 = *(buffer++);
+
+    unsigned int message_length = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
 
     //Очищаем message
     message.clear();
