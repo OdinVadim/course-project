@@ -78,6 +78,10 @@ int command_echo(int socket)
 
 int command_sort(int socket)
 {
+    //Ввод метода сортировки
+    std::string method;
+    std::cin >> method;
+
     //Ввод пути файла
     std::string file_name;
     std::cin >> file_name;
@@ -102,6 +106,10 @@ int command_sort(int socket)
         int b;
         file >> b;
 
+        if (file.fail())
+        {
+            std::cout << "[Error] File contains uncorrect data\n";
+        }
         file_size++;
     }
 
@@ -123,9 +131,6 @@ int command_sort(int socket)
         message[i*int_size + 3] = (b & 0x0000'FF00) >> 8;
         message[i*int_size + 4] = (b & 0x0000'00FF);
     }
-
-    std::string method;
-    std::cin >> method;
 
     if (method == "selection")
     {
@@ -152,12 +157,17 @@ int command_sort(int socket)
         return -1;
     }
 
+    std::cout << "[Server] Array:";
     for (int i = 0; i < message.size() / int_size; i++)
     {
-        std::cout << "[Server] Array:";
-
         int b;
-        b = (message[int_size*i] << 24) + (message[int_size*i + 1] << 16) + (message[int_size*i + 2] << 8) + (message[int_size*i + 3]);
+
+        unsigned char a1 = (message[i*int_size]);
+        unsigned char a2 = (message[i*int_size + 1]);
+        unsigned char a3 = (message[i*int_size + 2]);
+        unsigned char a4 = (message[i*int_size + 3]);
+        
+        b = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
 
         std::cout << " " << b;
     }

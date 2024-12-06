@@ -72,7 +72,12 @@ int message_sort(int socket, const std::vector<char> message)
     //Записваем в arr данные из message
     for (int i = 0; i < arr_size; i++)
     {
-        arr[i] = (message[i*4 + 1] << 24) + (message[i*4 + 2] << 16) + (message[i*4 + 3] << 8) + (message[i*4 + 4]);
+        unsigned char a1 = (message[i*int_size + 1]);
+        unsigned char a2 = (message[i*int_size + 2]);
+        unsigned char a3 = (message[i*int_size + 3]);
+        unsigned char a4 = (message[i*int_size + 4]);
+
+        arr[i] = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
     }
 
     //Сортировка выбором
@@ -130,7 +135,7 @@ int handle_message(int socket, const std::vector<char> message)
         }
     }
     //Сортировка массива
-    else if ((message[0] & 0b0001'0000) != 0)
+    else if ((message[0] & 0b0010'0000) != 0)
     {
         if (message_sort(socket, message) < 0)
         {
