@@ -6,6 +6,9 @@
 #include "sorts.h"
 #include "search.h"
 
+//Размер целого числа в байтах
+const int int_size = 4;
+
 //Список команд сервера
 enum class server_command
 {
@@ -51,16 +54,93 @@ int message_echo(int socket, const std::vector<char> message)
     return 0;
 }
 
+int message_sort(int socket, const std::vector<char> message)
+{
+    //Проверяем корректность сообщения
+    if (message.size() % int_size != 1)
+    {
+        std::cout << "[Info] Client " << socket << " send uncoorrect data\n";
+        return 0;
+    }
+
+    //Размер массива чисел
+    int arr_size = message.size() / int_size;
+
+    //Создаём массив чисел arr
+    std::vector<int> arr = std::vector<int>(arr_size);
+
+    //Записваем в arr данные из message
+    for (int i = 0; i < arr_size; i++)
+    {
+        unsigned char a1 = (message[i*int_size + 1]);
+        unsigned char a2 = (message[i*int_size + 2]);
+        unsigned char a3 = (message[i*int_size + 3]);
+        unsigned char a4 = (message[i*int_size + 4]);
+
+        arr[i] = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
+    }
+
+    //Сортировка выбором
+    if (message[0] == char(server_command::selection_sort))
+    {
+        selection_sort(arr);
+    }
+    //Сортировка Шелла
+    else if (message[0] == char(server_command::shell_sort))
+    {
+        shell_sort(arr);
+    }
+    //Некорректные данные
+    else
+    {
+        std::cout << "[Info] Client " << socket << " send uncoorrect data\n";
+        return 0;
+    }
+
+    //Создаём массив sort, который будет отправлен обратно клиенту
+    std::vector<char> sort = std::vector<char>(arr_size*int_size);
+    
+    //Записываем данные из arr в sort
+    for (int i = 0; i < arr_size; i++)
+    {
+        sort[i*4] = (arr[i] & 0xFF00'0000) >> 24;
+        sort[i*4 + 1] = (arr[i] & 0x00FF'0000) >> 16;
+        sort[i*4 + 2] = (arr[i] & 0x0000'FF00) >> 8;
+        sort[i*4 + 3] = (arr[i] & 0x0000'00FF);
+    }
+
+    //Отправляем данные обратно клиенту
+    if (send_message(socket, sort) < 0)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
 int handle_message(int socket, const std::vector<char> message)
 {
+    //Отключение сервера
     if (message[0] == char(server_command::exit))
     {
         std::cout << "[Info] Recieve exit message from client " << socket << "\n";
         return 1;
     }
+    //Эхо
     else if (message[0] == char(server_command::echo))
     {
-        message_echo(socket, message);
+        if (message_echo(socket, message) < 0)
+        {
+            return -1;
+        }
+    }
+    //Сортировка массива
+    else if ((message[0] & 0b0010'0000) != 0)
+    {
+        if (message_sort(socket, message) < 0)
+        {
+            return -1;
+        }
     }
     else
     {
