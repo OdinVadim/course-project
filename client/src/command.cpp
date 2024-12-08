@@ -149,7 +149,7 @@ int command_sort(int socket)
     //Неизвестный метод сортировки
     else
     {
-        std::cout << "[Client] " << method << " is unknown method\n";
+        std::cout << "[Info] " << method << " is unknown method\n";
         return 0;
     }
 
@@ -202,9 +202,10 @@ int command_sort(int socket)
         output_file << "\n" << b;
     }
 
+    //Закрываем файл для записи
     output_file.close();    
 
-    std::cout << "[Client] Data has been written to " << output_file_name << "\n";
+    std::cout << "[Info] Data has been written to " << output_file_name << "\n";
     return 0;
 }
 
@@ -234,7 +235,7 @@ int handle_command(int socket, const std::string& command)
     //Неизвестная команда
     else
     {
-        std::cout << "[Client] " << command << " is unknown command\n";
+        std::cout << "[Info] " << command << " is unknown command\n";
     }
 
     return 0;

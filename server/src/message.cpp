@@ -85,14 +85,14 @@ int message_sort(int socket, const std::vector<char> message)
     {
         std::cout << "[Client " << socket << "] Requested selection sorting\n";
         selection_sort(arr);
-        std::cout << "[Server] Selection sorting has been done\n";
+        std::cout << "[Info] Selection sorting has been done\n";
     }
     //Сортировка Шелла
     else if (message[0] == char(server_command::shell_sort))
     {
         std::cout << "[Client " << socket << "] Requested shell sorting\n";
         shell_sort(arr);
-        std::cout << "[Server] Shell sorting has been done\n";
+        std::cout << "[Info] Shell sorting has been done\n";
     }
     //Некорректные данные
     else
