@@ -5,6 +5,17 @@
 
 using namespace std;
 
+struct element
+{
+    int value;
+    int key;
+
+    bool operator<(const element& a)
+    {
+        return (this->value < a.value);
+    }
+};
+
 int linear_search(const vector<int>& arr, int a)
 {
     int n = arr.size();
@@ -35,32 +46,40 @@ int linear_barrier_search( vector<int>& arr, int a)
     return i;
 }
 
-int binary_search(vector<int>& arr, int a)
+int binary_search(vector<int>& arr_, int a)
 {
+    vector<element> arr = vector<element>(arr_.size());
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        arr[i].value = arr_[i];
+        arr[i].key = i;
+    }
+    sort(begin(arr),end(arr));
     int n = arr.size();
     int left = 0;
     int right = n - 1;
-    if (arr[0] == a)
+    if (arr[0].value == a)
     {
-        return 0;
+        return arr[0].key;
     }
-    if (arr[n - 1] == a)
+    if (arr[n - 1].value == a)
     {
-        return n - 1;
+        return arr[n - 1].key;
     }
 
     while (right - left > 1)
     {
         n = n / 2;
-        if (arr[left + n] == a)
+        if (arr[left + n].value == a)
         {
-            return left + n;
+            return arr[left + n].key;
         }
-        if (arr[left + n] < a)
+        if (arr[left + n].value < a)
         {
             left = left + n;
         }
-        if (arr[left + n] > a)
+        if (arr[left + n].value > a)
         {
             right = left + n;
         }
@@ -72,16 +91,23 @@ int binary_search(vector<int>& arr, int a)
 }
 
 
-int sorted_linear_search(vector<int>& arr, int a)
+int sorted_linear_search(vector<int>& arr_, int a)
 {
+    vector<element> arr = vector<element>(arr_.size());
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        arr[i].value = arr_[i];
+        arr[i].key = i;
+    }
     sort(begin(arr),end(arr));
     int n = arr.size();
     int i = 0;
     for (i; i < n; i++)
     {
-        if (arr[i] == a)
+        if (arr[i].value == a)
         {
-            return i;
+            return arr[i].key;
         }
     }
     return -1;
