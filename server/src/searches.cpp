@@ -55,7 +55,7 @@ int binary_search(vector<int>& arr_, int a)
         arr[i].value = arr_[i];
         arr[i].key = i;
     }
-    sort(begin(arr),end(arr));
+    sort(arr.begin(),arr.end());
     int n = arr.size();
     int left = 0;
     int right = n - 1;
