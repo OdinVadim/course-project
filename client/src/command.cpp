@@ -192,7 +192,14 @@ int command_search(int socket)
         
     int b = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
 
-    std::cout << "[Server] Key of searching element is " << b << "\n";
+    if (b == -1)
+    {
+        std::cout << "[Server] Searching element is out\n";
+    }
+    else
+    {
+        std::cout << "[Server] Key of searching element is " << (b+1) << "\n";
+    }
 
     return 0;
 }
