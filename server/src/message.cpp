@@ -81,14 +81,14 @@ int message_search(int socket, const std::vector<char> message)
     std::vector<int> arr = std::vector<int>(arr_size);
 
     //Записваем в arr данные из message
-    for (int i = 1; i < arr_size; i++)
+    for (int i = 1; i <= arr_size; i++)
     {
         unsigned char a1 = (message[i*int_size + 1]);
         unsigned char a2 = (message[i*int_size + 2]);
         unsigned char a3 = (message[i*int_size + 3]);
         unsigned char a4 = (message[i*int_size + 4]);
 
-        arr[i] = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
+        arr[i - 1] = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
     }
 
     int out;

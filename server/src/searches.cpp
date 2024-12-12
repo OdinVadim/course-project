@@ -55,33 +55,26 @@ int binary_search(vector<int>& arr_, int a)
         arr[i].value = arr_[i];
         arr[i].key = i;
     }
-    sort(arr.begin(),arr.end());
-    int n = arr.size();
-    int left = 0;
-    int right = n - 1;
-    if (arr[0].value == a)
-    {
-        return arr[0].key;
-    }
-    if (arr[n - 1].value == a)
-    {
-        return arr[n - 1].key;
-    }
+    sort(arr.begin(), arr.end());
 
-    while (right - left > 1)
+    int left = 0;
+    int right = arr.size() - 1;
+
+    while (left <= right)
     {
-        n = n / 2;
-        if (arr[left + n].value == a)
+        int middle = (left + right) / 2;
+
+        if (arr[middle].value == a)
         {
-            return arr[left + n].key;
+            return arr[middle].key;
         }
-        if (arr[left + n].value < a)
+        else if (arr[middle].value < a)
         {
-            left = left + n;
+            left = middle + 1;
         }
-        if (arr[left + n].value > a)
+        else if (arr[middle].value > a)
         {
-            right = left + n;
+            right = middle - 1;
         }
 
     }
@@ -100,7 +93,7 @@ int sorted_linear_search(vector<int>& arr_, int a)
         arr[i].value = arr_[i];
         arr[i].key = i;
     }
-    sort(begin(arr),end(arr));
+    sort(arr.begin(),arr.end());
     int n = arr.size();
     int i = 0;
     for (i; i < n; i++)
