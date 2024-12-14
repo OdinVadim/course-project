@@ -93,7 +93,7 @@ int sorted_linear_search(vector<int>& arr_, int a)
         arr[i].value = arr_[i];
         arr[i].key = i;
     }
-    sort(arr.begin(), arr.end());
+    sort(arr.begin(),arr.end());
     int n = arr.size();
     int i = 0;
     for (i; i < n; i++)
