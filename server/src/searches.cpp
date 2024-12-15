@@ -2,6 +2,8 @@
 #include <vector>
 #include "search.h"
 #include <algorithm>
+#include <map>
+#include <string>
 
 using namespace std;
 
@@ -37,6 +39,7 @@ int linear_barrier_search( vector<int>& arr, int a)
 
 int binary_search(vector<int>& arr, int a)
 {
+    std::sort(arr.begin(), arr.end(), ());
     int n = arr.size();
     int left = 0;
     int right = n - 1;
@@ -74,15 +77,34 @@ int binary_search(vector<int>& arr, int a)
 
 int sorted_linear_search(vector<int>& arr, int a)
 {
-    sort(begin(arr),end(arr));
+    // std::map<std::string, int> slov;
+    // int n = arr.size();
+    // int i = 0;
+    // for (i; i < n; i++)
+    // {
+    //     string string_i = to_string(i);
+    //     slov[string_i] = arr[i];
+    // }
+    // std::vector<std::pair<int, std::string>> fr;
+    // for (const auto& el : slov) {
+    //    fr.push_back({el.second, el.first});
+    // }
+    // std::sort(fr.begin(), fr.end(), [](const auto& el1, const auto& el2) { return el1.first > el2.first;});
+    
     int n = arr.size();
     int i = 0;
+    struct data
+    {
+        float val;
+        int index;
+    };
+
+    std::vector<data> vals(n);
+
     for (i; i < n; i++)
     {
-        if (arr[i] == a)
-        {
-            return i;
-        }
+        vals[i].val=arr[i];
+        vals[i].index=i;
     }
-    return -1;
+    
 }
