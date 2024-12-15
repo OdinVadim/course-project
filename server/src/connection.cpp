@@ -1,5 +1,20 @@
 #include "connection.h"
 
+#ifdef WIN
+
+//Подключаем ещё один заголовочный файл, который необходим для взаимодействия с сокетами на Windows
+#include <ws2tcpip.h>
+
+//Строка, необходимая для компилятора Visual Studio, подключает библиотеку ws2_32.lib
+#pragma comment(lib, "ws2_32.lib")
+
+//Определяем закрытие функции на Windows
+#define CLOSE(s) closesocket(s)
+//Определяем проверку сокета на Windows
+#define IS_VALID(s) (s != INVALID_SOCKET)
+
+#endif /*WIN*/
+
 #ifdef UNIX
 
 //Подключаем заголовочные файлы, которые необходимы для взаимодействия с сокетами на Unix-системах
@@ -7,9 +22,19 @@
 #include <netdb.h>
 #include <unistd.h>
 
+//Определяем закрытие функции на UNIX-системах
+#define CLOSE(s) close(s)
+//Определяем проверку сокета на UNIX-системах
+#define IS_VALID(s) (s >= 0)
+
+#endif /*UNIX*/
+
 #include <iostream>
 //Файл, содержащий функцию memset()
 #include <cstring>
+
+//Подключаем файл, в котором объявлена функция обработки сообщений
+#include "message.h"
 
 //IP-адрес и номер порта
 const char* ip_address = "127.0.0.1";
@@ -20,15 +45,29 @@ const int backlog = 8;
 
 //Максимальный размер передаваемого пакета
 const int package_length = 16384;
+//Количество байт, выделяемое под длину сообщения
+const unsigned int lengths_bytes = 4;
 
 int start_server()
 {
     std::cout << "[Info] Starting the server...\n";
 
+    #ifdef WIN
+
+    //Инициализация Windows Socket API
+    WSADATA d;
+    if (WSAStartup(MAKEWORD(2, 2), &d))
+    {
+        std::cout << "[Error] Failed to initialize WinSockAPI\n";
+        return -1;
+    }
+
+    #endif /*WIN*/
+
     //Создаём сокет сервера
     int server_socket = create_server_socket();
     //Проверяем созданный сокет сервера
-    if (server_socket < 0)
+    if (!IS_VALID(server_socket))
     {
         return -1;
     }
@@ -41,7 +80,7 @@ void shutdown_server(int server_socket)
 {
     std::cout << "[Info] Shutting down the server...\n";
     //Закрываем сокет
-    close(server_socket);
+    CLOSE(server_socket);
     std::cout << "[Info] The server is shut down\n";
 }
 
@@ -86,7 +125,7 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
                     return -1;
                 }
             }
-            //Иначе читаем поступившие сообщения от клиента по этому сокету
+            //Иначе обрабатываем сообщение, полученное от этого сокета
             else
             {
                 std::vector<char> message;
@@ -96,22 +135,9 @@ int handle_connection(int server_socket, fd_set* socket_polling_list, int& max_s
                     continue;
                 }
 
-                std::cout << "[Client: " << socket << "] ";
-
-                int message_length = (message[0] << 24) + (message[1] << 16) + (message[2] << 8) + (message[3]);
-
-                for (int i = 0; i < message_length - 4; i++)
+                if (handle_message(socket, message) != 0)
                 {
-                    std::cout << message[i + 4];
-                }
-                std::cout << "\n";
-
-                send_message(socket, message);
-                if ((message.data() + 4) == exit_message)
-                {
-                    std::cout << "[Info] Recieve exit message from client " << socket << "\n";
-
-                    return 1;
+                    return -1;
                 }
             }
         }
@@ -129,7 +155,7 @@ int connect_client(int server_socket, fd_set* socket_polling_list, int& max_sock
     int client_socket = accept(server_socket, reinterpret_cast<sockaddr*>(&address), &address_len);
 
     //Проверяем созданный сокет клиента
-    if (client_socket < 0)
+    if (!IS_VALID(client_socket))
     {
         std::cout << "[Error] Failed to connect client\n";
         return -1;
@@ -151,7 +177,7 @@ int connect_client(int server_socket, fd_set* socket_polling_list, int& max_sock
 void disconnect_client(int client_socket, fd_set* socket_polling_list)
 {
     //Закрываем сокет клиента
-    close(client_socket);
+    CLOSE(client_socket);
     //Удаляем сокет из списка опрашиваемых сокетов
     FD_CLR(client_socket, socket_polling_list);
 
@@ -167,8 +193,16 @@ int send_message(int client_socket, const std::vector<char>& message)
     //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
 
+    //Количество байт, выделяемое под длину сообщения в текущем пакете
+    unsigned int buffer_lengths_bytes = lengths_bytes;
     //Длина передаваемого сообщения
-    unsigned int message_length = message.size();
+    unsigned int message_length = message.size() + lengths_bytes;
+
+    //Записываем в буфер длину передаваемого сообщения
+    *(buffer++) = (message_length & 0xFF00'0000) >> 24;
+    *(buffer++) = (message_length & 0x00FF'0000) >> 16;
+    *(buffer++) = (message_length & 0x0000'FF00) >> 8;
+    *(buffer++) = (message_length & 0x0000'00FF);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
@@ -177,10 +211,13 @@ int send_message(int client_socket, const std::vector<char>& message)
     for (int i = 0; i < a; i++)
     {
         //Записываем пакет из message в буфер
-        for (int j = 0; j < package_length; j++)
+        for (int j = 0; j < package_length - buffer_lengths_bytes; j++)
         {
-            *(buffer++) = message[i*package_length + j];
+            *(buffer++) = message[i*package_length + j + buffer_lengths_bytes - lengths_bytes];
         }
+
+        //Во втором и последующих пакетах память под длину сообщения не выделяется
+        buffer_lengths_bytes = 0;
 
         //Возвращаемся к первому элементу буфера
         buffer = buffer_;
@@ -195,10 +232,10 @@ int send_message(int client_socket, const std::vector<char>& message)
         }
     }
 
-    //Записываем неполный пакет из message в буфер
-    for (int i = 0; i < b; i++)
+    //Записываем не полный пакет из message в буфер
+    for (int i = 0; i < b - buffer_lengths_bytes; i++)
     {
-        *(buffer++) = message[package_length*a + i];
+        *(buffer++) = message[a*package_length + i + buffer_lengths_bytes - lengths_bytes];
     }
 
     //Возвращаемся к первому элементу буфера
@@ -219,7 +256,7 @@ int send_message(int client_socket, const std::vector<char>& message)
 }
 int recieve_message(int client_socket, std::vector<char>& message)
 {
-    //Создаём буфер, размер которого равен максимальноиу размеру одного пакета
+    //Создаём буфер, размер которого равен максимальному размеру одного пакета
     char* buffer = new char[package_length];
     //Создаём копию указателя на первый элемент буфера
     char* buffer_ = buffer;
@@ -243,28 +280,35 @@ int recieve_message(int client_socket, std::vector<char>& message)
         return -1;
     }
 
+    //Количество байт, выделяемое под длину сообщения в текущем пакете
+    unsigned int buffer_lengths_bytes = lengths_bytes;
     //Считываем длину передаваемого сообщения
-    unsigned int message_length = (*(buffer++) << 24) + (*(buffer++) << 16) + (*(buffer++) << 8) + *(buffer++);
+    unsigned char a1 = *(buffer++);
+    unsigned char a2 = *(buffer++);
+    unsigned char a3 = *(buffer++);
+    unsigned char a4 = *(buffer++);
+
+    unsigned int message_length = (a1 << 24) | (a2 << 16) | (a3 << 8) | a4;
 
     //Очищаем message
     message.clear();
     //Создаём новый vector<char>, длина которого равняется длине передаваемого сообщения
-    message = std::vector<char>(message_length);
+    message = std::vector<char>(message_length - lengths_bytes);
 
     int a = message_length / package_length;
     int b = message_length % package_length;
-    
-    //Возвращаемся к первому элементу буфера
-    buffer = buffer_;
 
     //Принимаем полностью заполненные пакеты
     for (int i = 0; i < a; i++)
     {
         //Записываем пакет из буфера в message
-        for (int j = 0; j < package_length; j++)
+        for (int j = 0; j < package_length - buffer_lengths_bytes; j++)
         {
-            message[package_length*i + j] = *(buffer++);
+            message[package_length*i + j + buffer_lengths_bytes - lengths_bytes] = *(buffer++);
         }
+
+        //Во втором и последующих пакетах память под длину сообщения не выделяется
+        buffer_lengths_bytes = 0;
 
         //Возвращаемся к первому элементу буфера
         buffer = buffer_;
@@ -294,10 +338,10 @@ int recieve_message(int client_socket, std::vector<char>& message)
         }
     }
 
-    //Записываем неполный пакет из буфера в message
-    for (int i = 0; i < b; i++)
+    //Записываем не полный пакет из буфера в message
+    for (int i = 0; i < b - buffer_lengths_bytes; i++)
     {
-        message[package_length*a + i] = *(buffer++);
+        message[package_length*a + i + buffer_lengths_bytes - lengths_bytes] = *(buffer++);
     }
     
     //Возвращаемся к первому элементу буфера
@@ -334,7 +378,7 @@ int create_server_socket()
     int server_socket = socket(address->ai_family, address->ai_socktype, address->ai_protocol);
 
     //Проверяем созданный сокет
-    if (server_socket < 0)
+    if (!IS_VALID(server_socket))
     {
         std::cout << "[Error] Failed to create server_socket\n";
 
@@ -356,8 +400,16 @@ int create_server_socket()
     //Освобождаем память от address
     freeaddrinfo(address);
 
-    //Настраиваем сокет
+    //На Windows необходим указатель на char
+    #ifdef WIN
+    char yes = 1;
+    #endif /*WIN*/
+    //На Unix-системах необходим указатель на int
+    #ifdef UNIX
     int yes = 1;
+    #endif /*UNIX*/
+
+    //Настраиваем сокет
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
     {
         std::cout << "[Error] Failed to set server_socket options\n";
@@ -374,5 +426,3 @@ int create_server_socket()
     //Возвращаем созданный сокет
     return server_socket;
 }
-
-#endif /*UNIX*/

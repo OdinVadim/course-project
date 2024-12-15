@@ -1,9 +1,8 @@
 #include <iostream>
 #include <vector>
 
-//Подключаем заголовочный файл с реализацией взаимодействия клиента и сервера
+//Подключаем заголовочный файл с объявлениями взаимодействия клиента и сервера
 #include "connection.h"
-#include "sorts.h"
 
 #ifdef WIN
 #include "h.h"
@@ -13,8 +12,6 @@ using namespace std;
 
 int main()
 {
-#ifdef UNIX
-
     int server_socket = start_server();
     int max_socket = server_socket;
 
@@ -29,11 +26,6 @@ int main()
     while (handle_connection(server_socket, &socket_polling_list, max_socket, "exit") == 0);
 
     shutdown_server(server_socket);
-
-#endif /*UNIX*/
-#ifdef WIN
-    cout << "It's server " << kafedra << "\n";
-#endif /*WIN*/
 
     return 0;
 }

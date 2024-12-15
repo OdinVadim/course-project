@@ -7,6 +7,17 @@
 
 using namespace std;
 
+struct element
+{
+    int value;
+    int key;
+
+    bool operator<(const element& a)
+    {
+        return (this->value < a.value);
+    }
+};
+
 int linear_search(const vector<int>& arr, int a)
 {
     int n = arr.size();
@@ -37,35 +48,35 @@ int linear_barrier_search( vector<int>& arr, int a)
     return i;
 }
 
-int binary_search(vector<int>& arr, int a)
+int binary_search(vector<int>& arr_, int a)
 {
-    std::sort(arr.begin(), arr.end(), ());
-    int n = arr.size();
-    int left = 0;
-    int right = n - 1;
-    if (arr[0] == a)
-    {
-        return 0;
-    }
-    if (arr[n - 1] == a)
-    {
-        return n - 1;
-    }
+    vector<element> arr = vector<element>(arr_.size());
 
-    while (right - left > 1)
+    for (int i = 0; i < arr.size(); i++)
     {
-        n = n / 2;
-        if (arr[left + n] == a)
+        arr[i].value = arr_[i];
+        arr[i].key = i;
+    }
+    sort(arr.begin(), arr.end());
+
+    int left = 0;
+    int right = arr.size() - 1;
+
+    while (left <= right)
+    {
+        int middle = (left + right) / 2;
+
+        if (arr[middle].value == a)
         {
-            return left + n;
+            return arr[middle].key;
         }
-        if (arr[left + n] < a)
+        else if (arr[middle].value < a)
         {
-            left = left + n;
+            left = middle + 1;
         }
-        if (arr[left + n] > a)
+        else if (arr[middle].value > a)
         {
-            right = left + n;
+            right = middle - 1;
         }
 
     }
@@ -75,22 +86,16 @@ int binary_search(vector<int>& arr, int a)
 }
 
 
-int sorted_linear_search(vector<int>& arr, int a)
+int sorted_linear_search(vector<int>& arr_, int a)
 {
-    // std::map<std::string, int> slov;
-    // int n = arr.size();
-    // int i = 0;
-    // for (i; i < n; i++)
-    // {
-    //     string string_i = to_string(i);
-    //     slov[string_i] = arr[i];
-    // }
-    // std::vector<std::pair<int, std::string>> fr;
-    // for (const auto& el : slov) {
-    //    fr.push_back({el.second, el.first});
-    // }
-    // std::sort(fr.begin(), fr.end(), [](const auto& el1, const auto& el2) { return el1.first > el2.first;});
-    
+    vector<element> arr = vector<element>(arr_.size());
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        arr[i].value = arr_[i];
+        arr[i].key = i;
+    }
+    sort(arr.begin(),arr.end());
     int n = arr.size();
     int i = 0;
     struct data
@@ -103,8 +108,10 @@ int sorted_linear_search(vector<int>& arr, int a)
 
     for (i; i < n; i++)
     {
-        vals[i].val=arr[i];
-        vals[i].index=i;
+        if (arr[i].value == a)
+        {
+            return arr[i].key;
+        }
     }
     
 }
