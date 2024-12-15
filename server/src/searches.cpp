@@ -98,13 +98,6 @@ int sorted_linear_search(vector<int>& arr_, int a)
     sort(arr.begin(),arr.end());
     int n = arr.size();
     int i = 0;
-    struct data
-    {
-        float val;
-        int index;
-    };
-
-    std::vector<data> vals(n);
 
     for (i; i < n; i++)
     {
