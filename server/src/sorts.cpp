@@ -8,8 +8,8 @@ using namespace std;
 
 void selection_sort(vector<int>& arr)
 {   
-    int swaps = 0;
-    int compares = 0;
+    unsigned long long int swaps = 0;
+    unsigned long long int compares = 0;
     time_t start, end;
     time(&start);
     int n = arr.size();
@@ -53,8 +53,8 @@ void selection_sort(vector<int>& arr)
 
 void shell_sort(vector<int>& arr)
 {
-    int swaps = 0;
-    int compares = 0;
+    unsigned long long int swaps = 0;
+    unsigned long long int compares = 0;
     time_t start, end;
     time(&start);
     int n = arr.size();
