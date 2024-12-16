@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include "time.h"
 #include "search.h"
 #include <algorithm>
 
@@ -18,31 +19,53 @@ struct element
 
 int linear_search(const vector<int>& arr, int a)
 {
+    unsigned long long int compares = 0;
+    time_t start, end;
+    time(&start);
     int n = arr.size();
     int i = 0;
     for (i; i < n; i++)
     {
+        compares += 2;
         if (arr[i] == a)
         {
+            time(&end);
+            double seconds = difftime(end, start);
+            cout << "[Info] Number of comparisons: " << compares << endl;
+            cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
             return i;
         }
-    }
+        
+    } 
+    time(&end);
+    double seconds = difftime(end, start);
+    cout << "[Info] Number of comparisons: " << compares << endl;
+    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
     return -1;
 }
 
 int linear_barrier_search( vector<int>& arr, int a)
 {
+    unsigned long long int compares = 0;
+    time_t start, end;
+    time(&start);
     int i = 0;
     int n = arr.size();
     arr.push_back(a);// выдавало ошбку, что-то нажал, перестало выдавать
     while (arr[i] != a)
     {
         i = i + 1;
+        compares += 1;
     }
     if (i == n)
     {
         i = -1;
+        compares += 1;
     }
+    time(&end);
+    double seconds = difftime(end, start);
+    cout << "[Info] Number of comparisons: " << compares << endl;
+    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
     return i;
 }
 
@@ -56,6 +79,9 @@ int binary_search(vector<int>& arr_, int a)
         arr[i].key = i;
     }
     sort(arr.begin(), arr.end());
+    unsigned long long int compares = 0;
+    time_t start, end;
+    time(&start);
 
     int left = 0;
     int right = arr.size() - 1;
@@ -63,9 +89,13 @@ int binary_search(vector<int>& arr_, int a)
     while (left <= right)
     {
         int middle = (left + right) / 2;
-
+        compares += 2;
         if (arr[middle].value == a)
         {
+            time(&end);
+            double seconds = difftime(end, start);
+            cout << "[Info] Number of comparisons: " << compares << endl;
+            cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
             return arr[middle].key;
         }
         else if (arr[middle].value < a)
@@ -74,11 +104,14 @@ int binary_search(vector<int>& arr_, int a)
         }
         else if (arr[middle].value > a)
         {
-            right = middle - 1;
+            right = middle - 1;   
         }
-
+        compares += 2;
     }
-
+    time(&end);
+    double seconds = difftime(end, start);
+    cout << "[Info] Number of comparisons: " << compares << endl;
+    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
     return -1;
 
 }
@@ -94,14 +127,27 @@ int sorted_linear_search(vector<int>& arr_, int a)
         arr[i].key = i;
     }
     sort(arr.begin(),arr.end());
+    unsigned long long int compares = 0;
+    time_t start, end;
+    time(&start);
     int n = arr.size();
     int i = 0;
     for (i; i < n; i++)
     {
         if (arr[i].value == a)
         {
+            compares += 2;
+            time(&end);
+            double seconds = difftime(end, start);
+            cout << "[Info] Number of comparisons: " << compares << endl;
+            cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
             return arr[i].key;
         }
+        
     }
+    time(&end);
+    double seconds = difftime(end, start);
+    cout << "[Info] Number of comparisons: " << compares << endl;
+    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
     return -1;
 }
