@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include "time.h"
 #include "searches.h"
@@ -32,7 +33,7 @@ int linear_search(const vector<int>& arr, int a)
             time(&end);
             double seconds = difftime(end, start);
             cout << "[Info] Number of comparisons: " << compares << endl;
-            cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+            cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
             return i;
         }
         
@@ -40,7 +41,7 @@ int linear_search(const vector<int>& arr, int a)
     time(&end);
     double seconds = difftime(end, start);
     cout << "[Info] Number of comparisons: " << compares << endl;
-    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+    cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
     return -1;
 }
 
@@ -65,7 +66,7 @@ int linear_barrier_search( vector<int>& arr, int a)
     time(&end);
     double seconds = difftime(end, start);
     cout << "[Info] Number of comparisons: " << compares << endl;
-    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+    cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
     return i;
 }
 
@@ -95,7 +96,7 @@ int binary_search(vector<int>& arr_, int a)
             time(&end);
             double seconds = difftime(end, start);
             cout << "[Info] Number of comparisons: " << compares << endl;
-            cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+            cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
             return arr[middle].key;
         }
         else if (arr[middle].value < a)
@@ -111,7 +112,7 @@ int binary_search(vector<int>& arr_, int a)
     time(&end);
     double seconds = difftime(end, start);
     cout << "[Info] Number of comparisons: " << compares << endl;
-    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+    cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
     return -1;
 
 }
@@ -134,13 +135,13 @@ int sorted_linear_search(vector<int>& arr_, int a)
     int i = 0;
     for (i; i < n; i++)
     {
+        compares += 2;
         if (arr[i].value == a)
         {
-            compares += 2;
             time(&end);
             double seconds = difftime(end, start);
             cout << "[Info] Number of comparisons: " << compares << endl;
-            cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+            cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
             return arr[i].key;
         }
         
@@ -148,6 +149,6 @@ int sorted_linear_search(vector<int>& arr_, int a)
     time(&end);
     double seconds = difftime(end, start);
     cout << "[Info] Number of comparisons: " << compares << endl;
-    cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+    cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
     return -1;
 }
