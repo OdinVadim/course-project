@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 #include "time.h"
 #include "sorts.h"
@@ -46,7 +47,7 @@ void selection_sort(vector<int>& arr)
     cout << "[Info] Number of comparisons: " << compares << endl;
     if (n > 15)
     {
-        cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+        cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds"<< endl;
     }
     
 }
@@ -96,6 +97,6 @@ void shell_sort(vector<int>& arr)
     cout << "[Info] Number of comparisons: " << compares << endl;
     if (n > 15)
     {
-        cout << "[Info] Time spent by the algorithm: " << seconds << " seconds" << endl;
+        cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
     }
 }
