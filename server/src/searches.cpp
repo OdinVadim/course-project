@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "time.h"
-#include "search.h"
+#include "searches.h"
 #include <algorithm>
 
 using namespace std;
