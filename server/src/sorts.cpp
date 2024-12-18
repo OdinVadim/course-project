@@ -2,7 +2,7 @@
 #include <vector>
 #include <iomanip>
 
-#include "time.h"
+#include <chrono>
 #include "sorts.h"
 
 using namespace std;
@@ -11,8 +11,7 @@ void selection_sort(vector<int>& arr)
 {   
     unsigned long long int swaps = 0;
     unsigned long long int compares = 0;
-    time_t start, end;
-    time(&start);
+    auto start = chrono::high_resolution_clock::now();
     int n = arr.size();
     for (int i = 0; i < n - 1; i++)
     {
@@ -41,13 +40,14 @@ void selection_sort(vector<int>& arr)
             cout << endl;
         }
     }
-    time(&end);
-    double seconds = difftime(end, start);
+    auto end = chrono::high_resolution_clock::now();
+    double seconds = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+    seconds *= 1e-9;
     cout << "[Info] Number of permutations: " << swaps << endl;
     cout << "[Info] Number of comparisons: " << compares << endl;
     if (n > 15)
     {
-        cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds"<< endl;
+        cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(7) << " seconds"<< endl;
     }
     
 }
@@ -56,8 +56,7 @@ void shell_sort(vector<int>& arr)
 {
     unsigned long long int swaps = 0;
     unsigned long long int compares = 0;
-    time_t start, end;
-    time(&start);
+    auto start = chrono::high_resolution_clock::now();
     int n = arr.size();
     int gap = n / 2;
     int numb = 0;
@@ -91,12 +90,13 @@ void shell_sort(vector<int>& arr)
         gap /= 2;
         compares += 1;
     }
-    time(&end);
-    double seconds = difftime(end, start);
+    auto end = chrono::high_resolution_clock::now();
+    double seconds = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+    seconds *= 1e-9;
     cout << "[Info] Number of permutations: " << swaps << endl;
     cout << "[Info] Number of comparisons: " << compares << endl;
     if (n > 15)
     {
-        cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(5) << " seconds" << endl;
+        cout << "[Info] Time spent by the algorithm: " << fixed << seconds << setprecision(7) << " seconds" << endl;
     }
 }
